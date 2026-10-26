@@ -1,3 +1,5 @@
+"""Pruebas de los contratos con datos ficticios y sin conexión a MongoDB."""
+
 import unittest
 from decimal import Decimal
 
@@ -9,6 +11,7 @@ PRODUCT_ID = "0123456789abcdef01234567"
 
 
 def product_payload():
+    """Devuelve un diccionario independiente para cada caso de validación."""
     return {
         "sku": "TEST-001",
         "name": "Producto de prueba",
@@ -23,6 +26,8 @@ def product_payload():
 
 
 class SchemaTests(unittest.TestCase):
+    """Protege precisión monetaria, entradas permitidas e importes del pedido."""
+
     def test_price_keeps_decimal_precision_and_json_roundtrip(self):
         product = ProductCreate(**product_payload())
         self.assertEqual(product.price, Decimal("125000.50"))
@@ -42,6 +47,7 @@ class SchemaTests(unittest.TestCase):
             {"image_url": "not-a-url"},
             {"currency": "USD"},
         ]
+        # Cada subprueba identifica el dato inválido que debe ser rechazado.
         for changes in cases:
             with self.subTest(changes=changes), self.assertRaises(ValidationError):
                 ProductCreate(**(product_payload() | changes))
@@ -66,6 +72,7 @@ class SchemaTests(unittest.TestCase):
                 OrderCreate(items=items)
 
     def test_order_snapshot_requires_consistent_amounts_and_aware_date(self):
+        # 0.10 por tres evita que un cálculo con float pase inadvertido.
         item = {
             "product_id": PRODUCT_ID,
             "quantity": 3,
@@ -76,7 +83,7 @@ class SchemaTests(unittest.TestCase):
         }
         order = {
             "id": PRODUCT_ID,
-            "customer_id": "customer-test",
+            "customer_id": PRODUCT_ID,
             "items": [item],
             "total": "0.30",
             "created_at": "2026-10-23T12:00:00Z",

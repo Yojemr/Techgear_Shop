@@ -10,4 +10,5 @@ select = ["E", "F", "I", "UP", "B"]
 quote-style = "double"
 
 [tool.ruff.lint.per-file-ignores]
+# La plantilla oficial contiene textos descriptivos que superan el límite de línea.
 "**/mongo_migrations/**" = ["E501"]

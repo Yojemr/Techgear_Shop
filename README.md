@@ -1,43 +1,34 @@
 # Techgear_Shop
 
-Taller 2 de APIs: tienda de hardware y accesorios tecnológicos con FastAPI, Django y MongoDB Atlas.
+Taller 2 de APIs: tienda de hardware y accesorios tecnológicos con FastAPI, Django MVT y MongoDB Atlas.
 
-## Arquitectura
+## Estructura
 
-- `techgear_api/app/main.py`: aplicación FastAPI y ciclo de vida de la conexión.
-- `techgear_api/app/core/`: configuración validada del entorno.
-- `techgear_api/app/db/`: conexión a MongoDB y preparación explícita de colecciones.
-- `techgear_api/app/schemas/`: esquemas Pydantic de productos y pedidos.
-- `techgear_api/tests/`: pruebas con datos ficticios y conexiones simuladas.
-- `techgear_web/config/`: configuración inicial del proyecto Django MVT.
-- `pyproject.toml`: reglas compartidas de formato y análisis con Ruff.
+- `techgear_api/app/main.py`: aplicación FastAPI, ciclo de vida de MongoDB y rutas documentadas en Swagger.
+- `techgear_api/app/api/`: autenticación, usuarios, productos, pedidos y conversión de respuestas.
+- `techgear_api/app/core/`: configuración validada, hash de contraseñas y tokens.
+- `techgear_api/app/db/`: conexión a MongoDB y creación explícita de colecciones e índices.
+- `techgear_api/app/schemas/`: contratos Pydantic para datos recibidos y respuestas.
+- `techgear_api/tests/`: pruebas con información ficticia y conexiones simuladas.
+- `techgear_web/config/`: estructura inicial de Django MVT, que consumirá la API por HTTP.
+- `render.yaml`: configuración declarativa del servicio FastAPI en Render.
+- `pyproject.toml`: reglas de formato y análisis estático con Ruff.
 
 ## Alcance funcional
 
-- Productos reales con SKU único, nombre, marca, categoría, descripción, especificaciones técnicas, precio en COP, existencias, URL de imagen y estado activo.
-- Registro de clientes por cuenta propia y por un administrador.
-- Carrito con cantidades, subtotales y total. Editar o abandonar el carrito no modifica existencias en MongoDB.
-- Confirmación del carrito: validación de disponibilidad, registro del pedido y descuento de existencias.
-- Administración de productos, existencias y estados de los pedidos.
-- Registro interno del proceso posterior, sin integración con pagos ni transportadoras.
+- Cuentas de clientes guardadas en MongoDB. Registro público asigna rol de cliente; un administrador puede registrar clientes.
+- Contraseñas almacenadas como hash Argon2. El inicio de sesión emite tokens Bearer de duración limitada.
+- CRUD administrativo de productos. Las consultas públicas muestran solo productos activos; el borrado es lógico para conservar pedidos históricos.
+- Creación de pedidos autenticados: el servidor determina cliente y precios, conserva copia del SKU, nombre y precio, calcula subtotales con `Decimal` y descuenta stock.
+- Las existencias se descuentan al confirmar el pedido, no al cambiar el carrito. Si una compra falla por disponibilidad, la transacción no guarda pedido ni descuentos parciales.
+- Los administradores pueden avanzar estados secuenciales. Cancelar un pedido confirmado o en preparación devuelve las existencias; después de enviado no se puede cancelar.
+- No se integran pagos, transportadoras ni otros terceros.
 
-## Clase 1
+El catálogo comienza vacío: no se cargan datos de productos sin verificar las especificaciones y precios en fuentes del fabricante o del vendedor autorizado.
 
-Se incluyen los entornos independientes, la estructura base, la conexión a MongoDB y los esquemas de entrada y salida. La API expone una ruta informativa en `/` y Swagger en `/docs`. Los endpoints de productos y pedidos, las cuentas, el carrito y las interfaces de negocio corresponden a etapas posteriores.
+## Requisitos e instalación
 
-Toda la persistencia utiliza MongoDB en la base `techgear_shop`: Django gestionará usuarios, permisos y sesiones mediante Django MongoDB Backend; FastAPI gestionará productos y pedidos mediante PyMongo. En esta etapa se prepara la configuración, sin ejecutar migraciones de Django ni crear usuarios. Django incluye las migraciones compatibles con ObjectId de la plantilla oficial de MongoDB.
-
-Las contraseñas se gestionarán mediante el sistema de autenticación y hashing de Django. La interfaz accederá a productos y pedidos a través de FastAPI; Django solo accederá directamente a las colecciones de sus componentes internos.
-
-La aplicación debe ejecutarse en un servidor accesible para utilizarla desde otros equipos. MongoDB centraliza la persistencia; la configuración actual de los servidores sigue limitada a localhost.
-
-## Requisitos
-
-- Python 3.14.
-- Acceso a MongoDB Atlas y una URI válida con los permisos requeridos para la base del proyecto.
-- PowerShell para ejecutar los comandos siguientes desde la raíz del repositorio.
-
-## Instalación
+Se requiere Python 3.14 y acceso a MongoDB Atlas. Desde la raíz del repositorio, crea los entornos independientes:
 
 ```powershell
 python -m venv techgear_api/.venv
@@ -46,78 +37,93 @@ python -m venv techgear_web/.venv
 & ./techgear_web/.venv/Scripts/python.exe -m pip install -r techgear_web/requirements.txt
 ```
 
-Crear `techgear_api/.env` a partir de `techgear_api/.env.example` y `techgear_web/.env` a partir de `techgear_web/.env.example` solo si aún no existen. Los archivos privados no se versionan.
+Si no existen, copia los archivos de ejemplo sin reemplazar configuraciones locales:
+
+```powershell
+if (-not (Test-Path ./techgear_api/.env)) { Copy-Item ./techgear_api/.env.example ./techgear_api/.env }
+if (-not (Test-Path ./techgear_web/.env)) { Copy-Item ./techgear_web/.env.example ./techgear_web/.env }
+```
+
+Completa `techgear_api/.env` con la URI privada del clúster, la base `techgear_shop` y una clave aleatoria `JWT_SECRET_KEY` de al menos 32 bytes. En `techgear_web/.env`, configura la clave de Django y la URL de API. Los archivos `.env` están excluidos de Git.
 
 | Variable | Aplicación | Uso |
 | --- | --- | --- |
 | `MONGO_URI` | API y Web | URI privada de MongoDB Atlas. |
-| `MONGO_DB_NAME` | API y Web | Base del proyecto: `techgear_shop`. |
+| `MONGO_DB_NAME` | API | Base del proyecto: `techgear_shop`. |
+| `JWT_SECRET_KEY` | API | Clave de firma privada de los tokens, mínimo 32 bytes. |
+| `JWT_ACCESS_TOKEN_MINUTES` | API | Duración del token; por defecto 30 minutos. |
 | `DJANGO_SECRET_KEY` | Web | Clave privada de Django, generada localmente. |
 | `DJANGO_DEBUG` | Web | `True` para desarrollo local; `False` fuera de ese entorno. |
 | `DJANGO_ALLOWED_HOSTS` | Web | Hosts permitidos separados por comas. |
-| `TECHGEAR_API_URL` | Web | Dirección de la API; localmente `http://127.0.0.1:8001`. |
+| `TECHGEAR_API_URL` | Web | Dirección de API; localmente `http://127.0.0.1:8001`. |
 
-Para generar una clave local de Django:
-
-```powershell
-& ./techgear_web/.venv/Scripts/python.exe -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
-```
-
-Guardar la clave generada en el `.env` de Django. Nunca incorporarla a commits.
-
-## MongoDB
-
-Desde `techgear_api`, verificar la conexión sin escribir datos:
+Para generar una clave local de JWT sin imprimirla en el código fuente, puedes usar:
 
 ```powershell
-& ./.venv/Scripts/python.exe -m app.db.mongodb
+& ./techgear_api/.venv/Scripts/python.exe -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-Para preparar explícitamente la base configurada:
+Guarda el resultado solo en `.env` o en el gestor de variables de Render.
+
+## Preparación de MongoDB y primer administrador
+
+Desde `techgear_api`, prepara las colecciones e índices necesarios. El comando es explícito e idempotente; no inserta productos ni cuentas:
 
 ```powershell
 & ./.venv/Scripts/python.exe -m app.db.mongodb --initialize
 ```
 
-Este comando crea las colecciones `products` y `orders` si no existen y asegura un índice único en `products.sku`. No inserta productos, pedidos ni datos de demostración. El inicio normal de la API verifica la conexión y no crea colecciones.
+Crea manualmente el primer administrador con solicitud interactiva y contraseña oculta:
 
-## Ejecución local
+```powershell
+& ./.venv/Scripts/python.exe -m app.cli create-admin
+```
 
-Primera terminal, desde la raíz:
+Este comando crea una cuenta en la base configurada. No se ejecuta automáticamente al arrancar la aplicación.
+
+## Ejecución local y Swagger
+
+Desde la raíz, inicia FastAPI:
 
 ```powershell
 & ./techgear_api/.venv/Scripts/python.exe -m uvicorn app.main:app --app-dir techgear_api --host 127.0.0.1 --port 8001 --reload
 ```
 
-Segunda terminal, desde la raíz:
+La API está en <http://127.0.0.1:8001/> y la documentación interactiva en <http://127.0.0.1:8001/docs>. Para Django, en otra terminal:
 
 ```powershell
 & ./techgear_web/.venv/Scripts/python.exe techgear_web/manage.py runserver 127.0.0.1:8000
 ```
 
-- API: <http://127.0.0.1:8001/>
-- Swagger UI: <http://127.0.0.1:8001/docs>
-- Django: <http://127.0.0.1:8000/>
+En Swagger, prueba primero `POST /auth/register` para crear un cliente, luego inicia sesión en `POST /auth/login` y copia `access_token` en **Authorize**. Las rutas marcadas con candado aceptan ese token. El administrador se crea con el comando anterior; desde su token puede registrar clientes y administrar productos y pedidos.
 
-Estos servidores son para desarrollo local. Django puede advertir sobre migraciones pendientes en este esqueleto inicial.
+### Rutas principales
 
-## Esquemas
+| Método y ruta | Acceso | Operación |
+| --- | --- | --- |
+| `POST /auth/register` | Público | Registro de cliente. |
+| `POST /auth/login` | Público | Inicio de sesión y entrega de token. |
+| `GET /users/me` | Cliente o administrador | Perfil autenticado. |
+| `POST /users/` | Administrador | Registro administrativo de cliente. |
+| `GET /products/`, `GET /products/{id}` | Público | Catálogo y consulta de producto activo. |
+| `POST /products/`, `PUT /products/{id}`, `DELETE /products/{id}` | Administrador | Crear, editar y desactivar productos. |
+| `POST /orders/` | Cliente o administrador | Confirmar pedido y descontar inventario. |
+| `GET /orders/`, `GET /orders/{id}` | Autenticado | Ver pedidos propios; administradores ven todos. |
+| `PATCH /orders/{id}/status` | Administrador | Avanzar estado o cancelar antes del envío. |
 
-Los esquemas se encuentran en `app/schemas/`. `ProductCreate` valida datos de producto; `ProductRead` añade su identificador. `OrderCreate` recibe exclusivamente identificadores de producto y cantidades. La identidad del cliente autenticado y los precios se obtendrán en el servidor cuando se implemente la creación de pedidos.
+Los estados permitidos avanzan así: `confirmed` → `preparing` → `shipped` → `delivered`. Desde `confirmed` y `preparing` también se permite `cancelled`; desde `shipped` solo se permite `delivered`.
 
-`OrderRead` incluye el cliente, los productos con copia del SKU, nombre y precio, los subtotales, el total en COP, la fecha con zona horaria y el estado. Los importes utilizan `Decimal`, con hasta dos decimales. Se valida la igualdad entre subtotal y precio por cantidad, y entre total y suma de subtotales. No se realizan conversiones a `float`. La conversión explícita a tipos BSON se implementará con la persistencia.
+## Despliegue de la API en Render
 
-| Estado interno | Significado |
-| --- | --- |
-| `confirmed` | Confirmado |
-| `preparing` | En preparación |
-| `shipped` | Enviado |
-| `delivered` | Entregado |
-| `cancelled` | Cancelado |
+El archivo `render.yaml` configura un Web Service gratuito con raíz `techgear_api`, instalación de dependencias, inicio de Uvicorn y revisión de salud. Para usarlo, conecta el repositorio de GitHub en Render y crea el Blueprint desde la raíz del repositorio. Define allí `MONGO_URI`; Render genera `JWT_SECRET_KEY` aleatoriamente en la creación del Blueprint. Las variables `MONGO_DB_NAME` y `JWT_ACCESS_TOKEN_MINUTES` tienen valores de desarrollo adecuados para este proyecto.
 
-## Calidad y pruebas
+Antes de probarlo, confirma que el usuario de base de datos de Atlas tenga permisos sobre `techgear_shop` y que la lista de acceso de red permita el tráfico del servicio. Mantén el acceso restringido a las direcciones o rangos requeridos; no abras Atlas a cualquier IP como atajo.
 
-Desde la raíz:
+El plan gratuito de Render puede suspender el servicio tras inactividad y tardar en despertar al recibir la siguiente solicitud. Es adecuado para demostración académica, no para una tienda en producción. La instancia gratuita de Render no permite ejecutar tareas de una sola vez desde su panel; prepara el índice y crea la cuenta administrativa desde tu computador con `.env` local apuntando a Atlas.
+
+## Pruebas y calidad
+
+Desde la raíz del repositorio:
 
 ```powershell
 & ./techgear_api/.venv/Scripts/python.exe -m pip install -r requirements-dev.txt
@@ -133,16 +139,14 @@ Remove-Item Env:PYTHONPATH
 git diff --check
 ```
 
-Las pruebas automáticas no requieren credenciales ni escriben en MongoDB Atlas.
+Las pruebas automáticas simulan MongoDB y no necesitan credenciales de Atlas ni escriben en la base de datos.
 
 ## Control de versiones
 
-Trabajo progresivo y secuencial exclusivamente sobre `main`. Las convenciones y comprobaciones previas a publicar se describen en [CONTRIBUTING.md](CONTRIBUTING.md).
+El taller avanza secuencialmente en `main`, con un solo commit por clase usando Conventional Commits. Las convenciones y comprobaciones están en [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Integración Django y MongoDB
+## Django y MongoDB
 
-Se utiliza `django-mongodb-backend` 5.2.x con Django 5.2.x. `config/apps.py`, `DEFAULT_AUTO_FIELD` y `mongo_migrations/` adaptan los componentes internos de Django a identificadores ObjectId. Las migraciones están versionadas, sin aplicarse en esta etapa.
+Se conserva Django como interfaz MVT que consumirá FastAPI por HTTP. Las cuentas de clientes, productos y pedidos se administran centralmente en la API; no se duplican usuarios con el modelo nativo de Django. La configuración inicial de componentes internos de Django utiliza `django-mongodb-backend` 5.2.x sin ejecutar migraciones en esta etapa.
 
-La configuración se basa en la [guía oficial de MongoDB](https://www.mongodb.com/docs/languages/python/django-mongodb/v5.2/get-started/) y en la [plantilla oficial, revisión 3c0170f](https://github.com/mongodb-labs/django-mongodb-project/tree/3c0170f6e6f9d110123e17e91d3c30c928c5dc0b).
-
-Las reglas de trabajo y los límites de alcance del proyecto están en [AGENTS.md](AGENTS.md).
+La configuración sigue la [guía oficial de MongoDB](https://www.mongodb.com/docs/languages/python/django-mongodb/v5.2/get-started/) y la [plantilla oficial, revisión 3c0170f](https://github.com/mongodb-labs/django-mongodb-project/tree/3c0170f6e6f9d110123e17e91d3c30c928c5dc0b).

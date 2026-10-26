@@ -10,6 +10,7 @@ permissions:
   contents: read
 
 jobs:
+  # Valida contratos y ciclo de vida con conexiones simuladas, sin secretos de Atlas.
   api:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -31,6 +32,7 @@ jobs:
           PYTHONPATH: techgear_api
         run: python -m unittest discover -s techgear_api/tests -v
 
+  # Comprueba Django con configuración ficticia; no ejecuta migraciones ni consultas.
   web:
     runs-on: ubuntu-latest
     timeout-minutes: 10

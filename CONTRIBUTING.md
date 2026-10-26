@@ -23,7 +23,7 @@ Formato Conventional Commits: `tipo(alcance): descripción`.
 | `refactor` | Reorganización sin cambiar el comportamiento. |
 | `ci` | Integración continua. |
 
-Usar ámbitos como `api`, `web`, `schemas` o `db` cuando aporten contexto. Cada commit debe representar un cambio completo y coherente. No reescribir el historial publicado ni forzar subidas sin autorización expresa.
+Usar ámbitos como `api`, `web`, `schemas` o `db` cuando aporten contexto. Cada clase se entrega mediante un único commit que reúne sus cambios completos y coherentes. No reescribir el historial publicado ni forzar subidas sin autorización expresa.
 
 ## Código y datos
 
