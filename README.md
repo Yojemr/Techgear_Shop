@@ -11,7 +11,6 @@ Taller 2 de APIs: tienda de hardware y accesorios tecnológicos con FastAPI, Dja
 - `techgear_api/app/schemas/`: contratos Pydantic para datos recibidos y respuestas.
 - `techgear_api/tests/`: pruebas con información ficticia y conexiones simuladas.
 - `techgear_web/config/`: estructura inicial de Django MVT, que consumirá la API por HTTP.
-- `render.yaml`: configuración declarativa del servicio FastAPI en Render.
 - `pyproject.toml`: reglas de formato y análisis estático con Ruff.
 
 ## Alcance funcional
@@ -115,7 +114,7 @@ Los estados permitidos avanzan así: `confirmed` → `preparing` → `shipped` �
 
 ## Despliegue de la API en Render
 
-El archivo `render.yaml` configura un Web Service gratuito con raíz `techgear_api`, instalación de dependencias, inicio de Uvicorn y revisión de salud. Para usarlo, conecta el repositorio de GitHub en Render y crea el Blueprint desde la raíz del repositorio. Define allí `MONGO_URI`; Render genera `JWT_SECRET_KEY` aleatoriamente en la creación del Blueprint. Las variables `MONGO_DB_NAME` y `JWT_ACCESS_TOKEN_MINUTES` tienen valores de desarrollo adecuados para este proyecto.
+El servicio se configura directamente en el panel de Render. Usa la raíz `techgear_api`, el comando de compilación `pip install -r requirements.txt`, el comando de inicio `uvicorn app.main:app --host 0.0.0.0 --port $PORT` y la ruta de comprobación `/`. Configura `MONGO_URI` y `JWT_SECRET_KEY` como variables privadas en Render; usa `MONGO_DB_NAME=techgear_shop`, `JWT_ACCESS_TOKEN_MINUTES=30` y Python `3.14.7`. No guardes los valores secretos en este repositorio.
 
 Antes de probarlo, confirma que el usuario de base de datos de Atlas tenga permisos sobre `techgear_shop` y que la lista de acceso de red permita el tráfico del servicio. Mantén el acceso restringido a las direcciones o rangos requeridos; no abras Atlas a cualquier IP como atajo.
 
@@ -143,10 +142,10 @@ Las pruebas automáticas simulan MongoDB y no necesitan credenciales de Atlas ni
 
 ## Control de versiones
 
-El taller avanza secuencialmente en `main`, con un solo commit por clase usando Conventional Commits. Las convenciones y comprobaciones están en [CONTRIBUTING.md](CONTRIBUTING.md).
+El taller avanza secuencialmente en `main`, con un solo commit por clase y mensajes Conventional Commits.
 
 ## Django y MongoDB
 
-Se conserva Django como interfaz MVT que consumirá FastAPI por HTTP. Las cuentas de clientes, productos y pedidos se administran centralmente en la API; no se duplican usuarios con el modelo nativo de Django. La configuración inicial de componentes internos de Django utiliza `django-mongodb-backend` 5.2.x sin ejecutar migraciones en esta etapa.
+Se conserva Django como interfaz MVT que consumirá FastAPI por HTTP. Las cuentas de clientes, productos y pedidos se administran centralmente en la API; no se duplican usuarios con el modelo nativo de Django. La configuración inicial de componentes internos de Django utiliza `django-mongodb-backend` 6.1.x sin ejecutar migraciones en esta etapa.
 
 La configuración sigue la [guía oficial de MongoDB](https://www.mongodb.com/docs/languages/python/django-mongodb/v5.2/get-started/) y la [plantilla oficial, revisión 3c0170f](https://github.com/mongodb-labs/django-mongodb-project/tree/3c0170f6e6f9d110123e17e91d3c30c928c5dc0b).

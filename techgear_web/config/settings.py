@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "techgear_shop.apps.TechgearShopConfig",
     "django_mongodb_backend",
 ]
 
