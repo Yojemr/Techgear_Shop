@@ -1,0 +1,13 @@
+{% extends 'techgear_shop/base.html' %}
+{% block title %}Desactivar producto · Techgear{% endblock %}
+{% block content %}
+<div class="shell dashboard">
+  <a class="back-link" href="{% url 'shop:product_list' %}">← Volver a productos</a>
+  <section class="dashboard-panel delete-confirmation" aria-labelledby="delete-title">
+    <p class="eyebrow">ADMINISTRACIÓN / DISPONIBILIDAD</p><h1 id="delete-title">¿Retirar esta pieza?</h1>
+    <h2>{{ product.name }}</h2><p class="muted">SKU: {{ product.sku }}</p>
+    {% if product.active %}<p>El producto dejará de aparecer en el catálogo. Sus datos y referencias en pedidos anteriores se conservarán.</p>{% else %}<p>Este producto ya está inactivo.</p>{% endif %}
+    <form method="post" action="{% url 'shop:product_delete' product.id %}">{% csrf_token %}<div class="editor-actions"><a class="button button-light" href="{% url 'shop:product_list' %}">Volver</a>{% if product.active %}<button class="button button-danger" type="submit">Desactivar producto</button>{% endif %}</div></form>
+  </section>
+</div>
+{% endblock %}

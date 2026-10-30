@@ -51,5 +51,5 @@ jobs:
           MONGO_DB_NAME: techgear_ci
         run: |
           python techgear_web/manage.py check
-          python techgear_web/manage.py test config --verbosity 2
+          python techgear_web/manage.py test config techgear_shop --verbosity 2
           python -m pip check

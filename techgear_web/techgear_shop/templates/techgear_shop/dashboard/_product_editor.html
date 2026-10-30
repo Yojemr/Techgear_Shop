@@ -1,0 +1,23 @@
+<form method="post" class="dashboard-panel product-editor"{% if modal %} data-modal-form{% endif %} action="{% if product %}{% url 'shop:product_edit' product.id %}{% if modal %}?modal=1{% endif %}{% else %}{% url 'shop:product_create' %}{% endif %}">
+    {% csrf_token %}
+    <div class="editor-fields">
+    {% if form.non_field_errors %}<div class="form-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    <section class="editor-section" aria-labelledby="identity-heading"><h2 id="identity-heading">Información del componente</h2><div class="editor-grid">
+      {% for field in form %}
+        {% if field.name == 'sku' or field.name == 'name' or field.name == 'brand' or field.name == 'category' %}
+        <div class="form-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="field-error" role="alert">{{ field.errors }}</div>{% endif %}</div>
+        {% endif %}
+      {% endfor %}
+    </div></section>
+    <section class="editor-section" aria-labelledby="sale-heading"><h2 id="sale-heading">Precio y disponibilidad</h2><div class="editor-grid">
+      <div class="form-field"><label for="{{ form.price.id_for_label }}">{{ form.price.label }}</label>{{ form.price }}{% if form.price.errors %}<div class="field-error" role="alert">{{ form.price.errors }}</div>{% endif %}</div>
+      <div class="form-field"><label for="{{ form.stock.id_for_label }}">{{ form.stock.label }}</label>{{ form.stock }}{% if form.stock.errors %}<div class="field-error" role="alert">{{ form.stock.errors }}</div>{% endif %}</div>
+    </div><div class="visibility-field">{{ form.active }}<label for="{{ form.active.id_for_label }}">{{ form.active.label }}</label></div><p class="field-help">Un producto inactivo se conserva en administración y deja de aparecer en la tienda.</p></section>
+    <section class="editor-section" aria-labelledby="details-heading"><h2 id="details-heading">Detalles técnicos</h2>
+      <div class="form-field"><label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>{{ form.description }}{% if form.description.errors %}<div class="field-error" role="alert">{{ form.description.errors }}</div>{% endif %}</div>
+      <div class="form-field"><label for="{{ form.specifications.id_for_label }}">{{ form.specifications.label }}</label>{{ form.specifications }}<p class="field-help">{{ form.specifications.help_text }}</p>{% if form.specifications.errors %}<div class="field-error" role="alert">{{ form.specifications.errors }}</div>{% endif %}</div>
+      <div class="form-field"><label for="{{ form.image_url.id_for_label }}">{{ form.image_url.label }}</label>{{ form.image_url }}{% if form.image_url.errors %}<div class="field-error" role="alert">{{ form.image_url.errors }}</div>{% endif %}</div>
+    </section>
+    </div>
+    <div class="editor-actions">{% if modal %}<button class="button button-light" type="button" data-modal-close>Cancelar</button>{% else %}<a class="button button-light" href="{% url 'shop:product_list' %}">Cancelar</a>{% endif %}<button class="button button-dark" type="submit">{% if product %}Guardar cambios{% else %}Crear producto{% endif %} <span aria-hidden="true">↗</span></button></div>
+  </form>

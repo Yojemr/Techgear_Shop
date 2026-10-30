@@ -1,0 +1,460 @@
+{
+  "checked_on": "2026-10-29",
+  "currency": "COP",
+  "inventory_note": "Inventario de demostración aprobado: 5 unidades iniciales por producto. No corresponde a existencias del vendedor consultado.",
+  "items": [
+    {
+      "product": {
+        "sku": "TG-CPU-9600X",
+        "name": "AMD Ryzen 5 9600X",
+        "brand": "AMD",
+        "category": "Procesadores",
+        "description": "Procesador de escritorio Zen 5 para plataforma AM5. Sus seis núcleos y doce hilos permiten trabajar y jugar; requiere un disipador adquirido por separado.",
+        "specifications": {
+          "Núcleos": "6 núcleos",
+          "Hilos": "12 hilos",
+          "Socket": "AM5",
+          "Frecuencia base": "3,9 GHz",
+          "Frecuencia turbo": "Hasta 5,4 GHz",
+          "TDP": "65 W",
+          "Disipador incluido": "No"
+        },
+        "price": "1079000.00",
+        "image_url": "https://speedlogic.com.co/wp-content/uploads/2024/09/2096-600x600.png",
+        "currency": "COP",
+        "stock": 5,
+        "active": true
+      },
+      "sources": {
+        "price": "https://speedlogic.com.co/tienda/procesadores/procesador-amd-ryzen-5-9600x-54-6core-radeon-am5-no-fan/",
+        "specifications": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-5-9600x.html",
+        "image": "https://speedlogic.com.co/tienda/procesadores/procesador-amd-ryzen-5-9600x-54-6core-radeon-am5-no-fan/"
+      }
+    },
+    {
+      "product": {
+        "sku": "TG-GPU-RTX5060-SHADOW",
+        "name": "MSI GeForce RTX 5060 SHADOW 2X OC",
+        "brand": "MSI",
+        "category": "Tarjetas gráficas",
+        "description": "Tarjeta gráfica NVIDIA Blackwell con memoria GDDR7 y dos ventiladores. Un componente compacto para actualizar el rendimiento gráfico del computador.",
+        "specifications": {
+          "Memoria": "8 GB GDDR7",
+          "Bus de memoria": "128 bits",
+          "Núcleos CUDA": "3840",
+          "Interfaz": "PCIe 5.0 x16 (usa x8)",
+          "Consumo": "145 W",
+          "Fuente recomendada": "550 W",
+          "Alimentación": "1 conector de 8 pines"
+        },
+        "price": "1925000.00",
+        "image_url": "https://speedlogic.com.co/wp-content/uploads/2025/08/3751-600x600.png",
+        "currency": "COP",
+        "stock": 5,
+        "active": true
+      },
+      "sources": {
+        "price": "https://speedlogic.com.co/tienda/tarjetas-graficas/nvidia/tarjeta-de-video-msi-geforce-rtx-5060-shadow-2x-oc-8-gigas/",
+        "specifications": "https://www.msi.com/Graphics-Card/GeForce-RTX-5060-8G-SHADOW-2X-OC/Specification",
+        "image": "https://speedlogic.com.co/tienda/tarjetas-graficas/nvidia/tarjeta-de-video-msi-geforce-rtx-5060-shadow-2x-oc-8-gigas/"
+      }
+    },
+    {
+      "product": {
+        "sku": "TG-MB-B650M-GAMING",
+        "name": "MSI B650M GAMING WIFI",
+        "brand": "MSI",
+        "category": "Placas madre",
+        "description": "Placa madre micro-ATX con socket AM5, dos ranuras DDR5 y conectividad Wi-Fi 6E. Ofrece dos conexiones M.2 para almacenamiento de escritorio.",
+        "specifications": {
+          "Socket": "AM5",
+          "Memoria": "DDR5",
+          "Chipset": "AMD B650",
+          "Formato": "Micro-ATX",
+          "Ranuras RAM": "2 · hasta 128 GB",
+          "Almacenamiento": "2 M.2 PCIe 4.0 x4",
+          "Conectividad": "Wi-Fi 6E · Bluetooth 5.3"
+        },
+        "price": "579000.00",
+        "image_url": "https://speedlogic.com.co/wp-content/uploads/2024/11/34283-600x600.png",
+        "currency": "COP",
+        "stock": 5,
+        "active": true
+      },
+      "sources": {
+        "price": "https://speedlogic.com.co/tienda/placas-madre/amd-placas-madre/board-msi-b650m-gaming-wifi-pciex-hdmi-usb-32-2-ddr5-ryz/",
+        "specifications": "https://latam.msi.com/Motherboard/B650M-GAMING-WIFI/Specification",
+        "image": "https://speedlogic.com.co/tienda/placas-madre/amd-placas-madre/board-msi-b650m-gaming-wifi-pciex-hdmi-usb-32-2-ddr5-ryz/"
+      }
+    },
+    {
+      "product": {
+        "sku": "TG-RAM-FURY-16-6000",
+        "name": "Kingston FURY Beast RGB 16 GB",
+        "brand": "Kingston",
+        "category": "Memorias RAM",
+        "description": "Módulo DDR5 de escritorio con disipador e iluminación RGB. Su perfil XMP alcanza 6000 MT/s; la velocidad efectiva depende de la plataforma y su configuración.",
+        "specifications": {
+          "Capacidad": "16 GB",
+          "Velocidad": "6000 MT/s (XMP)",
+          "Tipo": "DDR5 UDIMM",
+          "Latencia": "CL40",
+          "Voltaje del perfil": "1,35 V",
+          "Perfil": "Intel XMP 3.0"
+        },
+        "price": "1059000.00",
+        "image_url": "https://speedlogic.com.co/wp-content/uploads/2024/04/5454-600x600.png",
+        "currency": "COP",
+        "stock": 5,
+        "active": true
+      },
+      "sources": {
+        "price": "https://speedlogic.com.co/tienda/memorias-ram/memoria-ram-para-pc-ddr5-16g-6000mhz-kingston-fury-beast-rgb/",
+        "specifications": "https://www.kingston.com/datasheets/KF560C40BBA-16.pdf",
+        "image": "https://speedlogic.com.co/tienda/memorias-ram/memoria-ram-para-pc-ddr5-16g-6000mhz-kingston-fury-beast-rgb/"
+      }
+    },
+    {
+      "product": {
+        "sku": "TG-SSD-NV3-1TB",
+        "name": "Kingston NV3 1 TB",
+        "brand": "Kingston",
+        "category": "Almacenamiento",
+        "description": "Unidad SSD NVMe de formato M.2 2280 para sistema operativo, aplicaciones y juegos. Esta versión de 1 TB utiliza una interfaz PCIe 4.0 de cuatro líneas.",
+        "specifications": {
+          "Capacidad": "1 TB",
+          "Interfaz": "PCIe 4.0 x4 NVMe",
+          "Formato": "M.2 2280",
+          "Lectura secuencial": "Hasta 6000 MB/s",
+          "Escritura secuencial": "Hasta 4000 MB/s",
+          "Resistencia": "320 TBW"
+        },
+        "price": "619000.00",
+        "image_url": "https://speedlogic.com.co/wp-content/uploads/2024/12/13223.2-600x600.png",
+        "currency": "COP",
+        "stock": 5,
+        "active": true
+      },
+      "sources": {
+        "price": "https://speedlogic.com.co/tienda/unidades-ssd/m-2-nvme/unidad-de-estado-solido-ssd-m2-nvme-1tb-kingston-nv3-6000-x-4000/",
+        "specifications": "https://www.kingston.com/datasheets/SNV3S_en.pdf",
+        "image": "https://speedlogic.com.co/tienda/unidades-ssd/m-2-nvme/unidad-de-estado-solido-ssd-m2-nvme-1tb-kingston-nv3-6000-x-4000/"
+      }
+    },
+    {
+      "product": {
+        "sku": "TG-PSU-CX650",
+        "name": "Corsair CX650 650 W",
+        "brand": "Corsair",
+        "category": "Fuentes de alimentación",
+        "description": "Fuente de alimentación ATX no modular con certificación 80 PLUS Bronze. Incluye ventilador de 120 mm y una carcasa de 125 mm de longitud.",
+        "specifications": {
+          "Potencia": "650 W",
+          "Certificación": "80 PLUS Bronze",
+          "Formato": "ATX",
+          "Cableado": "No modular",
+          "Ventilador": "120 mm",
+          "Longitud": "125 mm"
+        },
+        "price": "219000.00",
+        "image_url": "https://speedlogic.com.co/wp-content/uploads/2025/03/14245-600x600.png",
+        "currency": "COP",
+        "stock": 5,
+        "active": true
+      },
+      "sources": {
+        "price": "https://speedlogic.com.co/tienda/fuentes/fuente-corsair-650w-80-plus-cx650/",
+        "specifications": "https://www.corsair.com/us/en/p/psu/cp-9020278-na/cx-series-cx650-650-watt-80-plus-bronze-atx-power-supply-cp-9020278-na",
+        "image": "https://speedlogic.com.co/tienda/fuentes/fuente-corsair-650w-80-plus-cx650/"
+      }
+    },
+    {
+      "checked_on": "2026-10-30",
+      "product": {
+        "sku": "TG-CPU-9700X",
+        "name": "AMD Ryzen 7 9700X",
+        "brand": "AMD",
+        "category": "Procesadores",
+        "description": "Procesador Zen 5 de ocho núcleos para computadores con plataforma AM5 y memoria DDR5. Requiere un disipador adquirido por separado.",
+        "specifications": {
+          "Núcleos": "8 núcleos",
+          "Hilos": "16 hilos",
+          "Socket": "AM5",
+          "Frecuencia base": "3,8 GHz",
+          "Frecuencia turbo": "Hasta 5,5 GHz",
+          "TDP": "65 W",
+          "Disipador incluido": "No"
+        },
+        "price": "1469000.00",
+        "image_url": "https://speedlogic.com.co/wp-content/uploads/2024/09/2097-600x600.png",
+        "currency": "COP",
+        "stock": 5,
+        "active": true
+      },
+      "sources": {
+        "price": "https://speedlogic.com.co/tienda/procesadores/procesador-amd-ryzen-7-9700x-55-8core-radeon-am5-no-fan/",
+        "specifications": "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/amd-ryzen-7-9700x.html",
+        "image": "https://speedlogic.com.co/tienda/procesadores/procesador-amd-ryzen-7-9700x-55-8core-radeon-am5-no-fan/"
+      }
+    },
+    {
+      "checked_on": "2026-10-30",
+      "product": {
+        "sku": "TG-CPU-I5-14400F",
+        "name": "Intel Core i5-14400F",
+        "brand": "Intel",
+        "category": "Procesadores",
+        "description": "Procesador de escritorio con seis núcleos de rendimiento y cuatro de eficiencia. Permite usar DDR4 o DDR5 según la placa madre; necesita una tarjeta gráfica dedicada.",
+        "specifications": {
+          "Núcleos": "10 (6 P + 4 E)",
+          "Hilos": "16 hilos",
+          "Socket": "LGA1700",
+          "Frecuencia turbo": "Hasta 4,7 GHz",
+          "Potencia base": "65 W",
+          "Potencia turbo máxima": "148 W",
+          "Gráficos integrados": "No"
+        },
+        "price": "789000.00",
+        "image_url": "https://speedlogic.com.co/wp-content/uploads/2024/02/1129.1-600x600.png",
+        "currency": "COP",
+        "stock": 5,
+        "active": true
+      },
+      "sources": {
+        "price": "https://speedlogic.com.co/tienda/procesadores/intel/procesador-intel-core-i5-14400f-25-95m-10-cores-xiv-no-video/",
+        "specifications": "https://www.intel.com/content/www/us/en/products/sku/236777/intel-core-i5-processor-14400f-20m-cache-up-to-4-70-ghz/specifications.html",
+        "image": "https://speedlogic.com.co/tienda/procesadores/intel/procesador-intel-core-i5-14400f-25-95m-10-cores-xiv-no-video/"
+      }
+    },
+    {
+      "checked_on": "2026-10-30",
+      "product": {
+        "sku": "TG-GPU-RTX5070-VENTUS",
+        "name": "MSI GeForce RTX 5070 VENTUS 2X OC 12 GB",
+        "brand": "MSI",
+        "category": "Tarjetas gráficas",
+        "description": "Tarjeta gráfica NVIDIA con memoria GDDR7, dos ventiladores y diseño de 236 mm de longitud. Incluye un conector de alimentación de 16 pines.",
+        "specifications": {
+          "Memoria": "12 GB GDDR7",
+          "Bus de memoria": "192 bits",
+          "Núcleos CUDA": "6144",
+          "Interfaz": "PCIe 5.0",
+          "Frecuencia boost": "2542 MHz",
+          "Consumo": "250 W",
+          "Fuente recomendada": "650 W",
+          "Alimentación": "1 conector de 16 pines"
+        },
+        "price": "3249000.00",
+        "image_url": "https://speedlogic.com.co/wp-content/uploads/2025/04/3720.1-600x600.png",
+        "currency": "COP",
+        "stock": 5,
+        "active": true
+      },
+      "sources": {
+        "price": "https://speedlogic.com.co/tienda/tarjetas-graficas/nvidia/tarjeta-de-video-nvidia-geforce-msi-rtx-5070-ventus-2x-oc-12-gigas/",
+        "specifications": "https://us.msi.com/Graphics-Card/GeForce-RTX-5070-12G-VENTUS-2X-OC/Specification",
+        "image": "https://speedlogic.com.co/tienda/tarjetas-graficas/nvidia/tarjeta-de-video-nvidia-geforce-msi-rtx-5070-ventus-2x-oc-12-gigas/"
+      }
+    },
+    {
+      "checked_on": "2026-10-30",
+      "product": {
+        "sku": "TG-GPU-RX9060XT-GAMING16",
+        "name": "Gigabyte Radeon RX 9060 XT GAMING OC 16 GB",
+        "brand": "Gigabyte",
+        "category": "Tarjetas gráficas",
+        "description": "Tarjeta gráfica AMD con 16 GB de memoria GDDR6 y refrigeración de tres ventiladores. Ofrece salidas DisplayPort y HDMI para conectar monitores.",
+        "specifications": {
+          "Memoria": "16 GB GDDR6",
+          "Bus de memoria": "128 bits",
+          "Procesadores de flujo": "2048",
+          "Interfaz": "PCIe 5.0",
+          "Frecuencia boost": "Hasta 3320 MHz",
+          "Fuente recomendada": "450 W",
+          "Alimentación": "1 conector de 8 pines",
+          "Longitud": "281 mm"
+        },
+        "price": "2699000.00",
+        "image_url": "https://speedlogic.com.co/wp-content/uploads/2025/12/1-600x600.jpeg",
+        "currency": "COP",
+        "stock": 5,
+        "active": true
+      },
+      "sources": {
+        "price": "https://speedlogic.com.co/tienda/tarjetas-graficas/amd-tarjetas-graficas/tarjeta-de-video-gigabyte-amd-radeon-rx-9060-xt-gaming-oc-16-gigas/",
+        "specifications": "https://www.gigabyte.com/Graphics-Card/GV-R9060XTGAMING-OC-16GD/sp",
+        "image": "https://speedlogic.com.co/tienda/tarjetas-graficas/amd-tarjetas-graficas/tarjeta-de-video-gigabyte-amd-radeon-rx-9060-xt-gaming-oc-16-gigas/"
+      }
+    },
+    {
+      "checked_on": "2026-10-30",
+      "product": {
+        "sku": "TG-MB-B760M-D3HP-DDR4",
+        "name": "Gigabyte B760M D3HP DDR4",
+        "brand": "Gigabyte",
+        "category": "Placas madre",
+        "description": "Placa madre micro-ATX para procesadores Intel de generaciones 12, 13 y 14. Dispone de cuatro ranuras DDR4 y dos conectores M.2 para almacenamiento.",
+        "specifications": {
+          "Socket": "LGA1700",
+          "Chipset": "Intel B760",
+          "Formato": "Micro-ATX",
+          "Memoria": "4 ranuras DDR4, hasta 128 GB",
+          "Almacenamiento M.2": "2 conectores PCIe 4.0 x4",
+          "Almacenamiento SATA": "4 conectores de 6 Gb/s",
+          "Red": "Ethernet Gigabit"
+        },
+        "price": "504000.00",
+        "image_url": "https://speedlogic.com.co/wp-content/uploads/2025/06/33386.1-600x600.png",
+        "currency": "COP",
+        "stock": 5,
+        "active": true
+      },
+      "sources": {
+        "price": "https://speedlogic.com.co/tienda/placas-madre/intel-placas-madre/board-gigabyte-b760m-d3hp-ddr4-pciexp-4ddr4-xii-xiii-xiv/",
+        "specifications": "https://www.gigabyte.com/Motherboard/B760M-D3HP-DDR4/sp",
+        "image": "https://speedlogic.com.co/tienda/placas-madre/intel-placas-madre/board-gigabyte-b760m-d3hp-ddr4-pciexp-4ddr4-xii-xiii-xiv/"
+      }
+    },
+    {
+      "checked_on": "2026-10-30",
+      "product": {
+        "sku": "TG-RAM-FURY-16-3200-DDR4",
+        "name": "Kingston FURY Beast 16 GB DDR4 3200",
+        "brand": "Kingston",
+        "category": "Memorias RAM",
+        "description": "Módulo de memoria DDR4 de escritorio con disipador de perfil bajo. La velocidad de 3200 MT/s depende de la configuración y compatibilidad de la plataforma.",
+        "specifications": {
+          "Capacidad": "16 GB",
+          "Tipo": "DDR4 UDIMM",
+          "Velocidad": "3200 MT/s",
+          "Voltaje XMP": "1,35 V",
+          "Perfil": "Intel XMP 2.0",
+          "Disipador": "Perfil bajo"
+        },
+        "price": "159000.00",
+        "image_url": "https://speedlogic.com.co/wp-content/uploads/2021/08/5316-600x600.png",
+        "currency": "COP",
+        "stock": 5,
+        "active": true
+      },
+      "sources": {
+        "price": "https://speedlogic.com.co/tienda/memorias-ram/memoria-ram-para-pc-ddr4-16gb-3200-mhz-kingston-fury-beast/",
+        "specifications": "https://www.kingston.com/es/memory/gaming/kingston-fury-beast-ddr4-memory",
+        "image": "https://speedlogic.com.co/tienda/memorias-ram/memoria-ram-para-pc-ddr4-16gb-3200-mhz-kingston-fury-beast/"
+      }
+    },
+    {
+      "checked_on": "2026-10-30",
+      "product": {
+        "sku": "TG-SSD-A400-480GB",
+        "name": "Kingston A400 480 GB SATA",
+        "brand": "Kingston",
+        "category": "Almacenamiento",
+        "description": "Unidad de estado sólido SATA de 2,5 pulgadas para almacenamiento en computadores de escritorio o portátiles compatibles. Su carcasa tiene 7 mm de altura.",
+        "specifications": {
+          "Capacidad": "480 GB",
+          "Interfaz": "SATA 3.0, 6 Gb/s",
+          "Formato": "2,5 pulgadas; 7 mm",
+          "Lectura secuencial": "Hasta 500 MB/s",
+          "Escritura secuencial": "Hasta 450 MB/s",
+          "Resistencia": "160 TBW"
+        },
+        "price": "349000.00",
+        "image_url": "https://speedlogic.com.co/wp-content/uploads/2020/09/12031-600x600.png",
+        "currency": "COP",
+        "stock": 5,
+        "active": true
+      },
+      "sources": {
+        "price": "https://speedlogic.com.co/tienda/unidades-ssd/sata/unidad-de-estado-solido-sata-ssd-480gb-kingston-a400/",
+        "specifications": "https://www.kingston.com/en/ssd/a400-solid-state-drive",
+        "image": "https://speedlogic.com.co/tienda/unidades-ssd/sata/unidad-de-estado-solido-sata-ssd-480gb-kingston-a400/"
+      }
+    },
+    {
+      "checked_on": "2026-10-30",
+      "product": {
+        "sku": "TG-PSU-MAG-A850GL",
+        "name": "MSI MAG A850GL PCIE5 850 W",
+        "brand": "MSI",
+        "category": "Fuentes de alimentación",
+        "description": "Fuente de alimentación de 850 W con cableado completamente modular. Incluye un conector PCIe de 16 pines para tarjetas gráficas compatibles.",
+        "specifications": {
+          "Potencia": "850 W",
+          "Certificación": "80 PLUS Gold",
+          "Cableado": "Completamente modular",
+          "Ventilador": "120 mm",
+          "Conector PCIe 5.0": "1 de 16 pines, hasta 600 W",
+          "Dimensiones": "140 x 150 x 86 mm"
+        },
+        "price": "549000.00",
+        "image_url": "https://speedlogic.com.co/wp-content/uploads/2024/01/14221-600x600.png",
+        "currency": "COP",
+        "stock": 5,
+        "active": true
+      },
+      "sources": {
+        "price": "https://speedlogic.com.co/tienda/fuentes/fuente-msi-850w-mag-a850gl-pciex-5-0-modular/",
+        "specifications": "https://www.msi.com/Power-Supply/MAG-A850GL-PCIE5/Specification",
+        "image": "https://speedlogic.com.co/tienda/fuentes/fuente-msi-850w-mag-a850gl-pciex-5-0-modular/"
+      }
+    },
+    {
+      "checked_on": "2026-10-30",
+      "product": {
+        "sku": "TG-CASE-FRAME4000D-ARGB",
+        "name": "Corsair FRAME 4000D RS ARGB negro",
+        "brand": "Corsair",
+        "category": "Gabinetes",
+        "description": "Gabinete de torre media con panel lateral de vidrio templado y tres ventiladores RS120 ARGB incluidos. Permite instalar tarjetas gráficas de hasta 430 mm de longitud.",
+        "specifications": {
+          "Formato": "Torre media",
+          "Ventiladores incluidos": "3 RS120 ARGB de 120 mm",
+          "Placas compatibles": "Mini-ITX, Micro-ATX, ATX y E-ATX (hasta 305 x 277 mm)",
+          "Longitud máxima de GPU": "430 mm",
+          "Altura máxima de disipador": "170 mm",
+          "Panel lateral": "Vidrio templado",
+          "Color": "Negro"
+        },
+        "price": "425000.00",
+        "image_url": "https://speedlogic.com.co/wp-content/uploads/2025/06/16561.1-600x600.png",
+        "currency": "COP",
+        "stock": 5,
+        "active": true
+      },
+      "sources": {
+        "price": "https://speedlogic.com.co/tienda/cajas/caja-corsair-4000d-frame-rs-v-t-3-argb-negra/",
+        "specifications": "https://www.corsair.com/us/en/p/pc-cases/cc-9011296-ww/frame-4000d-rs-argb-modular-mid-tower-pc-case-cc-9011296-ww",
+        "image": "https://speedlogic.com.co/tienda/cajas/caja-corsair-4000d-frame-rs-v-t-3-argb-negra/"
+      }
+    },
+    {
+      "checked_on": "2026-10-30",
+      "product": {
+        "sku": "TG-COOLER-H212-HALO-BK",
+        "name": "Cooler Master Hyper 212 Halo Black",
+        "brand": "Cooler Master",
+        "category": "Refrigeración",
+        "description": "Disipador por aire con cuatro tubos de calor y ventilador PWM de 120 mm con iluminación ARGB. Su torre de 154 mm se adapta a plataformas Intel y AMD compatibles.",
+        "specifications": {
+          "Tipo": "Refrigeración por aire",
+          "Ventilador": "120 mm PWM ARGB",
+          "Tubos de calor": "4",
+          "Altura": "154 mm",
+          "Velocidad del ventilador": "650 a 2050 RPM (±10 %)",
+          "Sockets": "AMD AM4 y AM5; Intel LGA1700, LGA1200 y LGA115x"
+        },
+        "price": "229000.00",
+        "image_url": "https://speedlogic.com.co/wp-content/uploads/2023/10/10076-600x600.png",
+        "currency": "COP",
+        "stock": 5,
+        "active": true
+      },
+      "sources": {
+        "price": "https://speedlogic.com.co/tienda/refrigeraciones/disipadores/disipador-cooler-master-hyper-212-halo-negro/",
+        "specifications": "https://www.coolermaster.com/en-us/products/hyper-212-halo-black.html",
+        "image": "https://speedlogic.com.co/tienda/refrigeraciones/disipadores/disipador-cooler-master-hyper-212-halo-negro/"
+      }
+    }
+  ]
+}

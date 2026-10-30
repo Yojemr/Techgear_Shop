@@ -24,13 +24,17 @@ async def list_products(
     offset: int = Query(default=0, ge=0),
 ) -> list[dict[str, Any]]:
     """Lista solo productos activos y permite filtrar por categoría o texto."""
-    criteria: dict[str, Any] = {"active": True}
+    return await _product_rows(database, {"active": True}, category, search, limit, offset)
+
+
+async def _product_rows(database, criteria, category, search, limit, offset):
+    """Comparte búsqueda y paginación sin mezclar el acceso público y administrativo."""
     if category:
         criteria["category"] = category
     if search:
-        # La expresión escapa los caracteres para que el texto no se interprete como regex.
         import re
 
+        # Escapar el texto impide que una búsqueda se interprete como una expresión regular.
         criteria["$or"] = [
             {field: {"$regex": re.escape(search), "$options": "i"}}
             for field in ("name", "brand", "sku")
@@ -42,6 +46,38 @@ async def list_products(
         raise HTTPException(
             status_code=503, detail="No fue posible consultar el catálogo."
         ) from None
+
+
+# Estas rutas deben preceder a /{product_id}; requieren el mismo rol que las escrituras.
+@router.get("/manage/", response_model=list[ProductRead])
+async def managed_products(
+    database: Annotated[AsyncDatabase[dict[str, Any]], Depends(get_database)],
+    _: Annotated[dict[str, Any], Depends(require_admin)],
+    category: str | None = None,
+    search: str | None = Query(default=None, min_length=1, max_length=100),
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+) -> list[dict[str, Any]]:
+    """Incluye inactivos solo para el mantenimiento autenticado del catálogo."""
+    return await _product_rows(database, {}, category, search, limit, offset)
+
+
+@router.get("/manage/{product_id}", response_model=ProductRead)
+async def managed_product(
+    product_id: MongoId,
+    database: Annotated[AsyncDatabase[dict[str, Any]], Depends(get_database)],
+    _: Annotated[dict[str, Any], Depends(require_admin)],
+) -> dict[str, Any]:
+    """Permite editar también un producto retirado sin exponerlo en la tienda."""
+    try:
+        product = await database.products.find_one({"_id": ObjectId(product_id)})
+    except PyMongoError:
+        raise HTTPException(
+            status_code=503, detail="No fue posible consultar el producto."
+        ) from None
+    if product is None:
+        raise HTTPException(status_code=404, detail="Producto no encontrado.")
+    return json_document(product)
 
 
 @router.get("/{product_id}", response_model=ProductRead)

@@ -1,0 +1,68 @@
+{% load asset_tags %}
+<!doctype html>
+<html lang="es-CO">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Componentes para tu próximo computador: procesadores, gráficas, memoria y almacenamiento.">
+  <title>{% block title %}Techgear · Componentes para tu PC{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{% asset_url 'techgear_shop/favicon.svg' %}">
+  <link rel="stylesheet" href="{% asset_url 'techgear_shop/css/store.css' %}">
+  <script defer src="{% asset_url 'techgear_shop/js/store.js' %}"></script>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <div class="announcement"><span>PIEZA A PIEZA, UN MEJOR PC.</span><span>Componentes de escritorio · Precios en COP</span></div>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="{% url 'shop:catalog' %}" aria-label="Techgear, inicio">
+        <svg class="brand-mark" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#chip"></use></svg>
+        <span>techgear<span class="brand-dot">.</span></span>
+      </a>
+      <form class="header-search" action="{% url 'shop:catalog' %}" method="get" role="search">
+        <svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#search"></use></svg>
+        <label class="sr-only" for="search">Busca un componente</label>
+        <input id="search" name="q" type="search" maxlength="100" value="{{ search_query|default:'' }}" placeholder="¿Qué pieza necesita tu PC?">
+        <button type="submit" aria-label="Buscar">Buscar <span aria-hidden="true">↗</span></button>
+      </form>
+      <div class="account-nav">
+        {% if shop_account %}
+          <details class="account-menu">
+            <summary><svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#user"></use></svg><span>{{ shop_account.full_name|truncatechars:20 }}</span></summary>
+            <div class="account-panel">
+              <strong>{{ shop_account.full_name }}</strong>
+              <span>{{ shop_account.email }}</span>
+              <small>{% if shop_account.role == 'admin' %}Administrador{% else %}Cliente{% endif %}</small>
+              <form action="{% url 'shop:logout' %}" method="post">{% csrf_token %}<button type="submit">Cerrar sesión <span aria-hidden="true">↗</span></button></form>
+            </div>
+          </details>
+        {% else %}
+          <a class="login-link" href="{% url 'shop:login' %}"><svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#user"></use></svg><span>Iniciar sesión</span></a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+  {# La navegación principal comparte secciones; las categorías filtran solo el catálogo. #}
+  <nav class="main-nav" aria-label="Navegación principal">
+    <div class="shell main-links">
+      <a href="{% url 'shop:catalog' %}"{% if request.resolver_match.url_name == 'catalog' and not has_filters %} class="selected" aria-current="page"{% endif %}><svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#home"></use></svg><span>Inicio</span></a>
+      <a href="{% url 'shop:catalog' %}#catalogo"{% if has_filters or request.resolver_match.url_name == 'product_detail' %} class="selected" aria-current="location"{% endif %}><svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#catalog"></use></svg><span>Catálogo</span></a>
+      {% if shop_account.role == 'admin' %}
+      <a href="{% url 'shop:product_list' %}"{% if request.resolver_match.url_name == 'product_list' or request.resolver_match.url_name == 'product_create' or request.resolver_match.url_name == 'product_edit' or request.resolver_match.url_name == 'product_delete' %} class="selected" aria-current="page"{% endif %}><svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#board"></use></svg><span>Administración</span></a>
+      {% endif %}
+    </div>
+  </nav>
+  <main id="contenido">
+    {% if messages %}<div class="shell message-stack">{% for message in messages %}<div class="notice" role="status">{{ message }}</div>{% endfor %}</div>{% endif %}
+    {% if shop_auth_unavailable %}<div class="shell"><p class="notice" role="status">No pudimos verificar tu sesión. Intenta de nuevo en unos momentos.</p></div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div><a class="brand footer-brand" href="{% url 'shop:catalog' %}">techgear<span class="brand-dot">.</span></a><p>El siguiente nivel está en los detalles.</p></div>
+      <p>Componentes para computador.<br>Precios de referencia en pesos colombianos.</p>
+      <p class="footer-note">Catálogo de demostración.<br>Características y precios con fuentes documentadas.</p>
+    </div>
+  </footer>
+</body>
+</html>

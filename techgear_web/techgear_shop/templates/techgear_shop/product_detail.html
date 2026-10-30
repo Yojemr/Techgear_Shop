@@ -1,0 +1,19 @@
+{% extends 'techgear_shop/base.html' %}
+{% load asset_tags shop_tags %}
+{% block title %}{{ product.name }} · Techgear{% endblock %}
+{% block content %}
+<div class="shell detail-page">
+  <nav class="breadcrumbs" aria-label="Ruta de navegación"><a href="{% url 'shop:catalog' %}">Catálogo</a><span aria-hidden="true">/</span><a href="{% url 'shop:catalog' %}?category={{ product.category|urlencode }}#catalogo">{{ product.category }}</a><span aria-hidden="true">/</span><span>{{ product.brand }}</span></nav>
+  <div class="detail-top">
+    <div class="detail-image"><svg class="image-fallback" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#chip"></use></svg><img src="{{ product.image_url }}" width="600" height="600" alt="{{ product.name }}" referrerpolicy="no-referrer"></div>
+    <section class="detail-summary">
+      <span class="eyebrow">{{ product.brand }} / {{ product.category }}</span><h1>{{ product.name }}</h1><p class="detail-description">{{ product.description }}</p>
+      <div class="detail-price">{{ product.price|cop }} <span>COP</span></div><span class="price-note">Precio de referencia · pesos colombianos</span>
+      <div class="detail-stock availability {% if not product.stock %}unavailable{% endif %}"><span class="status-dot"></span>{% if product.stock %}{{ product.stock }} unidades disponibles{% else %}Sin existencias{% endif %}</div>
+      <p class="detail-sku">SKU {{ product.sku }}</p>
+      <a class="button button-dark" href="{% url 'shop:catalog' %}?category={{ product.category|urlencode }}#catalogo">Explorar esta categoría <span aria-hidden="true">↗</span></a>
+    </section>
+  </div>
+  <section class="specifications"><p class="eyebrow">CONOCE CADA DETALLE</p><h2>Especificaciones técnicas</h2><dl>{% for key, value in product.specifications.items %}<div><dt>{{ key }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl></section>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'techgear_shop/base.html' %}
+{% load asset_tags %}
+{% block title %}Iniciar sesión · Techgear{% endblock %}
+{% block body_class %}login-page{% endblock %}
+{% block content %}
+<div class="shell auth-layout">
+  <section class="auth-story" aria-labelledby="auth-title">
+    <span class="eyebrow">TU PRÓXIMO NIVEL EMPIEZA AQUÍ</span>
+    <h1 id="auth-title">Buenas piezas.<br>Grandes ideas.</h1>
+    <p>Un espacio para quienes disfrutan construir, mejorar y llevar su computador un poco más lejos.</p>
+    <div class="auth-art" aria-hidden="true"><div class="chip-orbit orbit-one"></div><div class="chip-orbit orbit-two"></div><svg><use href="{% asset_url 'techgear_shop/icons.svg' %}#chip"></use></svg><span class="art-label label-cpu">CPU / POTENCIA</span><span class="art-label label-gpu">GPU / RENDIMIENTO</span><span class="art-label label-ram">RAM / VELOCIDAD</span></div>
+    <span class="auth-story-bottom">COMPONENTES PARA HACERLO A TU MANERA. <span aria-hidden="true">↗</span></span>
+  </section>
+  <section class="auth-form-section" aria-labelledby="login-title">
+    <a class="back-link" href="{% url 'shop:catalog' %}"><span aria-hidden="true">←</span> Volver al catálogo</a>
+    <div class="auth-form-inner">
+      <span class="eyebrow">BIENVENIDO DE NUEVO</span>
+      <h2 id="login-title">Inicia sesión<span class="brand-dot">.</span></h2>
+      <p class="auth-description">Ingresa con tu cuenta de Techgear.</p>
+      <form method="post" action="{% url 'shop:login' %}" class="login-form">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        {% if form.non_field_errors %}<div class="notice notice-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="form-field"><label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>{{ form.email }}{% if form.email.errors %}<div class="field-error" role="alert">{{ form.email.errors }}</div>{% endif %}</div>
+        <div class="form-field"><label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label><div class="password-field">{{ form.password }}<button class="password-toggle" type="button" aria-label="Mostrar contraseña" aria-controls="{{ form.password.id_for_label }}" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#eye"></use></svg></button></div>{% if form.password.errors %}<div class="field-error" role="alert">{{ form.password.errors }}</div>{% endif %}</div>
+        <button class="button button-dark login-submit" type="submit">Entrar a mi cuenta <span aria-hidden="true">↗</span></button>
+      </form>
+      <p class="auth-hint"><svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#lock"></use></svg>Tu cuenta, a tu alcance. Cierra la sesión al terminar si usas un computador compartido.</p>
+    </div>
+  </section>
+</div>
+{% endblock %}

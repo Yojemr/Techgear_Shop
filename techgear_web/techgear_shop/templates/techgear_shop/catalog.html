@@ -1,0 +1,61 @@
+{% extends 'techgear_shop/base.html' %}
+{% load asset_tags shop_tags %}
+{% block content %}
+<div class="shell">
+  {% if not has_filters %}
+  {% include 'techgear_shop/_hero_carousel.html' %}
+  {% endif %}
+  {% if has_filters %}<h1 class="sr-only">Catálogo de componentes{% if selected_category %}: {{ selected_category }}{% endif %}</h1>{% endif %}
+  <div class="brand-strip" aria-label="Tipos de componentes"><span>EL PODER DE ELEGIR</span><strong>CPU</strong><span class="strip-dot">/</span><strong>GPU</strong><span class="strip-dot">/</span><strong>RAM</strong><span class="strip-dot">/</span><strong>SSD</strong><span class="strip-description">Tu equipo. A tu medida.</span></div>
+  <section id="catalogo" class="catalog-section" aria-labelledby="catalog-title">
+    <div class="section-heading"><div><p class="eyebrow">ENCUENTRA TU PRÓXIMA PIEZA</p><h2 id="catalog-title">{% if selected_category %}{{ selected_category }}{% elif search_query %}Resultados de búsqueda{% else %}Componentes destacados{% endif %}</h2></div><span class="item-count">{{ products|length }} componente{{ products|pluralize }}</span></div>
+    <div class="catalog-layout">
+      <aside class="catalog-sidebar" aria-label="Filtrar catálogo">
+        <h3>Explora por categoría</h3>
+        <a class="filter-link {% if not selected_category %}active{% endif %}" href="{% url 'shop:catalog' %}#catalogo"><span>Todos los componentes</span><span aria-hidden="true">↗</span></a>
+        {% for value, label, icon in component_categories %}<a class="filter-link {% if selected_category == value %}active{% endif %}" href="{% url 'shop:catalog' %}?category={{ value|urlencode }}#catalogo"><span><svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#{{ icon }}"></use></svg>{{ label }}</span><span aria-hidden="true">↗</span></a>{% endfor %}
+        <div class="sidebar-note"><svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#chip"></use></svg><strong>Los detalles importan.</strong><p>Revisa el socket, el tipo de memoria y las especificaciones antes de elegir tu componente.</p></div>
+      </aside>
+      <div class="catalog-results">
+        <div class="catalog-toolbar">
+          <span>{% if search_query %}Buscando: <strong>“{{ search_query }}”</strong>{% else %}Una buena pieza hace la diferencia.{% endif %}</span>
+          <form action="#catalogo" method="get" class="sort-form">
+            {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}">{% endif %}
+            {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+            <label class="sr-only" for="sort">Ordenar componentes</label>
+            <select id="sort" name="sort"><option value="">Nombre: A a Z</option><option value="price_asc" {% if sort_order == 'price_asc' %}selected{% endif %}>Menor precio</option><option value="price_desc" {% if sort_order == 'price_desc' %}selected{% endif %}>Mayor precio</option></select>
+            <button type="submit" class="sort-submit">Ordenar</button>
+          </form>
+        </div>
+        {% if filter_form.errors %}<div class="notice notice-error" role="alert">Revisa los filtros: {{ filter_form.errors }}</div>{% endif %}
+        {% if error_message %}
+          <div class="empty-state"><svg class="empty-icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#chip"></use></svg><h3>Estamos ajustando unas piezas</h3><p>{{ error_message }}</p><a class="button button-dark" href="{% url 'shop:catalog' %}">Volver a intentar <span aria-hidden="true">↗</span></a></div>
+        {% elif products %}
+          <div class="product-grid">
+            {% for product in products %}
+            <article class="product-card">
+              <a href="{% url 'shop:product_detail' product.id %}" class="product-image" aria-label="{{ product.category }}: ver {{ product.name }}">
+                <span class="product-category">{{ product.category }}</span>
+                <svg class="image-fallback" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#chip"></use></svg>
+                <img src="{{ product.image_url }}" alt="{{ product.name }}" width="600" height="600" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+                <span class="image-arrow" aria-hidden="true">↗</span>
+              </a>
+              <div class="product-info">
+                <span class="product-brand">{{ product.brand }}</span>
+                <h3><a href="{% url 'shop:product_detail' product.id %}">{{ product.name }}</a></h3>
+                <div class="spec-chips">{% for key, value in product.specifications.items %}{% if forloop.counter <= 2 %}<span>{{ value }}</span>{% endif %}{% endfor %}</div>
+                <div class="product-price">{{ product.price|cop }} <span>COP</span></div>
+                <div class="product-bottom"><span class="availability {% if not product.stock %}unavailable{% endif %}"><span class="status-dot"></span>{% if product.stock %}{{ product.stock }} disponibles{% else %}Sin existencias{% endif %}</span><a href="{% url 'shop:product_detail' product.id %}">Ver pieza <span aria-hidden="true">↗</span></a></div>
+              </div>
+            </article>
+            {% endfor %}
+          </div>
+        {% elif not filter_form.errors %}
+          <div class="empty-state"><svg class="empty-icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#search"></use></svg><h3>{% if has_filters %}Esa pieza aún no aparece{% else %}El catálogo está por comenzar{% endif %}</h3><p>{% if has_filters %}Prueba otra búsqueda o explora todos los componentes.{% else %}Aquí encontrarás los componentes cuando estén disponibles.{% endif %}</p>{% if has_filters %}<a class="button button-dark" href="{% url 'shop:catalog' %}">Ver todos los componentes</a>{% endif %}</div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+  <section class="bottom-callout"><div><span class="eyebrow">CONSTRUYE ALGO TUYO</span><h2>Cada gran equipo<br>empieza con una buena elección.</h2></div><a href="{% url 'shop:catalog' %}?category=Procesadores#catalogo" class="button button-light">Empieza por el procesador <span aria-hidden="true">↗</span></a></section>
+</div>
+{% endblock %}

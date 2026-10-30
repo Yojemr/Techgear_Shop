@@ -10,7 +10,10 @@ Taller 2 de APIs: tienda de hardware y accesorios tecnológicos con FastAPI, Dja
 - `techgear_api/app/db/`: conexión a MongoDB y creación explícita de colecciones e índices.
 - `techgear_api/app/schemas/`: contratos Pydantic para datos recibidos y respuestas.
 - `techgear_api/tests/`: pruebas con información ficticia y conexiones simuladas.
-- `techgear_web/config/`: estructura inicial de Django MVT, que consumirá la API por HTTP.
+- `techgear_web/config/`: configuración de Django y sesiones en MongoDB.
+- `techgear_web/techgear_shop/`: vistas, formularios, plantillas y recursos del catálogo.
+- `techgear_web/techgear_shop/services/`: consumo HTTP de la API.
+- `techgear_api/data/pc_components.json`: 16 componentes verificados con sus fuentes.
 - `pyproject.toml`: reglas de formato y análisis estático con Ruff.
 
 ## Alcance funcional
@@ -23,7 +26,7 @@ Taller 2 de APIs: tienda de hardware y accesorios tecnológicos con FastAPI, Dja
 - Los administradores pueden avanzar estados secuenciales. Cancelar un pedido confirmado o en preparación devuelve las existencias; después de enviado no se puede cancelar.
 - No se integran pagos, transportadoras ni otros terceros.
 
-El catálogo comienza vacío: no se cargan datos de productos sin verificar las especificaciones y precios en fuentes del fabricante o del vendedor autorizado.
+El catálogo inicial se centra en componentes de computador: procesadores, tarjetas gráficas, placas madre, RAM, SSD, fuentes, gabinetes y refrigeración. Los precios de referencia en COP se consultaron el 29/10/2026 y el 30/10/2026; las fichas se contrastaron con los fabricantes. El inventario inicial de demostración es de 5 unidades por producto. La carga es explícita y no sobrescribe registros existentes. Las [fuentes del catálogo](docs/catalog_sources.md) documentan las referencias.
 
 ## Requisitos e instalación
 
@@ -64,6 +67,45 @@ Para generar una clave local de JWT sin imprimirla en el código fuente, puedes 
 
 Guarda el resultado solo en `.env` o en el gestor de variables de Render.
 
+
+## Catálogo inicial y sesiones web
+
+Desde la raíz del repositorio, prepara las sesiones de Django una vez. La persistencia sigue en MongoDB; este comando no crea cuentas comerciales:
+
+```powershell
+& ./techgear_web/.venv/Scripts/python.exe techgear_web/manage.py migrate sessions
+```
+
+Carga las 16 referencias investigadas con el inventario inicial acordado:
+
+```powershell
+$env:PYTHONPATH = (Resolve-Path ./techgear_api).Path
+& ./techgear_api/.venv/Scripts/python.exe -m app.cli seed-catalog --stock 5
+Remove-Item Env:PYTHONPATH
+```
+
+El comando valida todos los productos antes de escribir y utiliza SKU únicos. Repetirlo conserva precios, datos e inventario de los productos que ya existen. No se ejecuta al arrancar los servidores.
+
+Con ambos servidores encendidos, abre el [catálogo local](http://127.0.0.1:8000/) o el [login](http://127.0.0.1:8000/ingresar/). La URL configurada en TECHGEAR_API_URL debe apuntar a la API que vas a utilizar. Mantén DJANGO_DEBUG=True solo en desarrollo local; al desactivarlo, las cookies requieren HTTPS.
+
+El login recibe correo y contraseña, consulta FastAPI y guarda el JWT en la sesión del servidor. El navegador recibe una cookie HttpOnly, no el JWT. Cada petición autenticada verifica el perfil vigente en la API; las sesiones vencidas o rechazadas se eliminan. El cierre de sesión utiliza POST y protección CSRF. No se duplican clientes mediante los usuarios nativos de Django.
+
+La interfaz permite consultar, buscar, ordenar y filtrar componentes, ver sus especificaciones e iniciar o cerrar sesión. Esta etapa no incorpora carrito ni confirmación de compras desde el frontend. Las cuentas existentes de la API sirven para ingresar; el registro sigue disponible en POST /auth/register.
+
+## Administración de productos
+
+Inicia sesión con una cuenta de la API que tenga rol de administrador. El menú principal mostrará **Administración**, que abre [el dashboard local](http://127.0.0.1:8000/gestion/productos/). Esta sección usa las cuentas comerciales de FastAPI; la ruta nativa /admin/ de Django es independiente.
+
+La tabla permite buscar por nombre, marca o SKU, filtrar por categoría y estado, crear productos, editar sus datos y confirmar una desactivación. Los productos inactivos siguen disponibles para edición y pueden reactivarse marcando **Visible en el catálogo**. Cada especificación técnica se escribe en una línea con el formato `Clave: Valor`. Los precios se envían como decimales y las existencias como enteros no negativos.
+
+La edición desde la tabla abre un modal con la ficha completa, el precio, las existencias y la visibilidad. El modal conserva las validaciones, mantiene el foco dentro de la ventana y actualiza la misma tabla después de guardar. Sin JavaScript, el enlace conserva el formulario de edición tradicional.
+
+La portada presenta tres banners con navegación manual, rotación cada siete segundos y pausa. La rotación se detiene al enfocar controles, al ocultar la pestaña o cuando el carrusel deja de estar visible; la preferencia de movimiento reducido lo inicia en pausa. Las ilustraciones SVG se sirven localmente.
+
+Los formularios usan POST y protección CSRF en Django. El servidor envía GET, POST, PUT o DELETE a FastAPI con el JWT guardado en sesión. Las dos aplicaciones comprueban el rol; ocultar un enlace no sustituye el control de acceso. Desactivar no elimina documentos ni referencias históricas, y solo sucede tras confirmar el formulario.
+
+Las lecturas administrativas de FastAPI son `GET /products/manage/` y `GET /products/manage/{id}`; incluyen inactivos y exigen rol admin. Las consultas públicas conservan únicamente productos activos.
+
 ## Preparación de MongoDB y primer administrador
 
 Desde `techgear_api`, prepara las colecciones e índices necesarios. El comando es explícito e idempotente; no inserta productos ni cuentas:
@@ -79,6 +121,28 @@ Crea manualmente el primer administrador con solicitud interactiva y contraseña
 ```
 
 Este comando crea una cuenta en la base configurada. No se ejecuta automáticamente al arrancar la aplicación.
+
+### Inicio conjunto en Windows
+
+Desde la terminal de VS Code, ubicada en la raíz del repositorio, ejecuta:
+
+```powershell
+.\iniciar_local.cmd
+```
+
+También puedes hacer doble clic en iniciar_local.cmd. El lanzador usa los entornos virtuales existentes, inicia FastAPI en 127.0.0.1:8001 y Django en 127.0.0.1:8000, y abre el catálogo cuando ambos responden. Mantén la consola abierta; Ctrl+C detiene los dos servicios y sus recargadores. Los cambios de código se recargan automáticamente.
+
+Puedes usar `.\iniciar_local.cmd --check` para comprobar los requisitos sin iniciar servidores, o `.\iniciar_local.cmd --no-browser` para iniciarlos sin abrir el navegador. Si los puertos ya están ocupados, el lanzador informa el problema y no detiene esos procesos.
+
+Para detener la API, el front y sus recargadores desde otra terminal, ejecuta:
+
+```powershell
+.\cerrar_local.cmd
+```
+
+También puedes hacer doble clic en cerrar_local.cmd. El comando identifica servidores de este repositorio, incluidos los iniciados manualmente con sus entornos virtuales; conserva terminales, navegadores y procesos de otros proyectos. `.\cerrar_local.cmd --check` solo comprueba si hay servidores, sin cerrarlos. El lanzador conjunto recibe primero una solicitud de cierre normal; si quedan procesos de servidores identificados, el comando los termina.
+
+Las aplicaciones leen sus archivos .env locales. Para esta ejecución, el front usa la API local y DJANGO_DEBUG=True sin modificar los archivos de configuración. El lanzador no instala dependencias, ejecuta migraciones ni inserta datos.
 
 ## Ejecución local y Swagger
 
@@ -132,7 +196,7 @@ $env:PYTHONPATH = (Resolve-Path ./techgear_api).Path
 & ./techgear_api/.venv/Scripts/python.exe -m unittest discover -s techgear_api/tests -v
 Remove-Item Env:PYTHONPATH
 & ./techgear_web/.venv/Scripts/python.exe techgear_web/manage.py check
-& ./techgear_web/.venv/Scripts/python.exe techgear_web/manage.py test config --verbosity 2
+& ./techgear_web/.venv/Scripts/python.exe techgear_web/manage.py test config techgear_shop --verbosity 2
 & ./techgear_api/.venv/Scripts/python.exe -m pip check
 & ./techgear_web/.venv/Scripts/python.exe -m pip check
 git diff --check
@@ -148,4 +212,4 @@ El taller avanza secuencialmente en `main`, con un solo commit por clase y mensa
 
 Se conserva Django como interfaz MVT que consumirá FastAPI por HTTP. Las cuentas de clientes, productos y pedidos se administran centralmente en la API; no se duplican usuarios con el modelo nativo de Django. La configuración inicial de componentes internos de Django utiliza `django-mongodb-backend` 6.1.x sin ejecutar migraciones en esta etapa.
 
-La configuración sigue la [guía oficial de MongoDB](https://www.mongodb.com/docs/languages/python/django-mongodb/v5.2/get-started/) y la [plantilla oficial, revisión 3c0170f](https://github.com/mongodb-labs/django-mongodb-project/tree/3c0170f6e6f9d110123e17e91d3c30c928c5dc0b).
+La configuración sigue la [guía oficial de MongoDB](https://www.mongodb.com/docs/languages/python/django-mongodb/current/) y la [plantilla oficial, revisión 3c0170f](https://github.com/mongodb-labs/django-mongodb-project/tree/3c0170f6e6f9d110123e17e91d3c30c928c5dc0b).

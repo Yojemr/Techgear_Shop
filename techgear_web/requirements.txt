@@ -1,8 +1,15 @@
+anyio==4.15.1
 asgiref==3.13.0
+certifi==2026.10.23
 Django==6.1.2
 django-mongodb-backend==6.1.0
 dnspython==2.9.0
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+idna==3.20
 pymongo==4.19.0
 python-dotenv==1.2.4
 sqlparse==0.6.0
 tzdata==2026.5
+typing_extensions==4.16.0

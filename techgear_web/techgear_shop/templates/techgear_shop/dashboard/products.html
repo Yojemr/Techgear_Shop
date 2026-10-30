@@ -1,0 +1,59 @@
+{% extends 'techgear_shop/base.html' %}
+{% load asset_tags shop_tags %}
+{% block title %}Productos · Administración · Techgear{% endblock %}
+{% block content %}
+<div class="shell dashboard">
+  <header class="dashboard-heading">
+    <div><p class="eyebrow">ADMINISTRACIÓN / CATÁLOGO</p><h1>Tus componentes<span class="brand-dot">.</span></h1><p>Gestiona las piezas que hacen parte de Techgear.</p></div>
+    <a class="button button-dark" href="{% url 'shop:product_create' %}">Nuevo producto <span aria-hidden="true">+</span></a>
+  </header>
+  <div class="dashboard-metrics" aria-label="Resumen de resultados">
+    <div><span>Productos encontrados</span><strong>{{ products|length }}</strong></div>
+    <div><span>Activos</span><strong>{{ active_count }}</strong></div>
+    <div><span>Inactivos</span><strong>{{ inactive_count }}</strong></div>
+    <div><span>Activos sin existencias</span><strong>{{ empty_stock_count }}</strong></div>
+  </div>
+  <section class="dashboard-panel" aria-labelledby="products-title">
+    <div class="panel-heading"><h2 id="products-title">Inventario de productos</h2><span class="muted">Precios en COP</span></div>
+    <form class="dashboard-filters" method="get">
+      <div class="form-field"><label for="{{ filter_form.q.id_for_label }}">Buscar por nombre, marca o SKU</label>{{ filter_form.q }}</div>
+      <div class="form-field"><label for="{{ filter_form.category.id_for_label }}">Categoría</label>{{ filter_form.category }}</div>
+      <div class="form-field"><label for="{{ filter_form.state.id_for_label }}">Estado</label>{{ filter_form.state }}</div>
+      <button class="button button-dark" type="submit">Filtrar</button>
+      <a class="button button-light" href="{% url 'shop:product_list' %}">Limpiar</a>
+      {% if filter_form.errors %}<div class="form-error" role="alert">Revisa los filtros seleccionados.</div>{% endif %}
+    </form>
+    {% if error_message %}
+      <div class="dashboard-empty"><p role="alert">{{ error_message }}</p><a class="button button-light" href="{% url 'shop:product_list' %}">Volver a intentar</a></div>
+    {% elif products %}
+    <div class="dashboard-table-wrap" tabindex="0" role="region" aria-label="Tabla de productos, desplazable horizontalmente">
+      <table class="dashboard-table">
+        <caption class="sr-only">Productos activos e inactivos del catálogo de Techgear</caption>
+        <thead><tr><th scope="col">Componente</th><th scope="col">SKU / Categoría</th><th scope="col">Precio</th><th scope="col">Existencias</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead>
+        <tbody>
+        {% for product in products %}
+          <tr>
+            <td><div class="table-product"><img src="{{ product.image_url }}" alt="" width="58" height="58" loading="lazy" decoding="async" referrerpolicy="no-referrer"><div><strong>{{ product.name }}</strong><span>{{ product.brand }}</span></div></div></td>
+            <td><strong class="table-sku">{{ product.sku }}</strong><span class="table-secondary">{{ product.category }}</span></td>
+            <td class="table-price">{{ product.price|cop }}</td>
+            <td><span class="{% if product.stock == 0 %}stock-empty{% endif %}">{{ product.stock }}</span></td>
+            <td><span class="state-badge {% if product.active %}state-active{% else %}state-inactive{% endif %}">{% if product.active %}Activo{% else %}Inactivo{% endif %}</span></td>
+            <td><div class="table-actions"><a href="{% url 'shop:product_edit' product.id %}" aria-label="Editar {{ product.name }}" data-product-edit>Editar <span aria-hidden="true">↗</span></a>{% if product.active %}<a class="action-danger" href="{% url 'shop:product_delete' product.id %}" aria-label="Desactivar {{ product.name }}">Desactivar</a>{% endif %}</div></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="dashboard-empty"><h3>No encontramos productos</h3><p>Ajusta los filtros o agrega una nueva pieza al catálogo.</p><a class="button button-dark" href="{% url 'shop:product_create' %}">Crear producto +</a></div>
+    {% endif %}
+  </section>
+</div>
+<dialog id="product-modal" class="product-modal" aria-labelledby="modal-title" aria-describedby="modal-description">
+  <header class="modal-heading"><div><p class="eyebrow">ADMINISTRACIÓN / PRODUCTOS</p><h2 id="modal-title" tabindex="-1">Editar producto</h2></div><button class="modal-close" type="button" aria-label="Cerrar edición" data-modal-close>×</button></header>
+  <p class="sr-only" id="modal-description">Edita los datos del componente, su precio y sus existencias. Guarda los cambios para actualizar el inventario.</p>
+  <p class="modal-status" role="status" data-modal-status hidden>Cargando producto…</p>
+  <p class="modal-error" role="alert" data-modal-error hidden></p>
+  <div data-modal-content></div>
+</dialog>
+{% endblock %}

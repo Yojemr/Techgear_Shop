@@ -1,9 +1,9 @@
-"""Rutas del esqueleto Django; el administrador nativo requiere sus migraciones."""
+"""El catálogo es la entrada del sitio; el administrador nativo conserva su ruta."""
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
 
-# Las páginas del catálogo, las cuentas y el carrito se incorporarán en sus aplicaciones MVT.
 urlpatterns = [
+    path("", include("techgear_shop.urls")),
     path("admin/", admin.site.urls),
 ]

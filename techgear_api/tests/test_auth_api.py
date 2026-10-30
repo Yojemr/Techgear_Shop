@@ -254,6 +254,24 @@ class AuthApiTests(unittest.IsolatedAsyncioTestCase):
                     self.assertEqual(deleted.status_code, 204)
                     hidden = await client.get(f"/products/{product_id}")
                     self.assertEqual(hidden.status_code, 404)
+                    admin_read = await client.get(f"/products/manage/{product_id}", headers=headers)
+                    self.assertEqual(admin_read.status_code, 200)
+                    self.assertFalse(admin_read.json()["active"])
+                    anonymous_read = await client.get(f"/products/manage/{product_id}")
+                    self.assertEqual(anonymous_read.status_code, 401)
+                    restored = await client.put(
+                        f"/products/{product_id}", json=product | {"active": True}, headers=headers
+                    )
+                    self.assertEqual(restored.status_code, 200)
+                    self.assertTrue(restored.json()["active"])
+                    visible_again = await client.get(f"/products/{product_id}")
+                    self.assertEqual(visible_again.status_code, 200)
+                    # El rol se vuelve a leer: un cambio a cliente bloquea el mantenimiento.
+                    users.documents[admin_id]["role"] = "customer"
+                    denied = await client.get(f"/products/manage/{product_id}", headers=headers)
+                    self.assertEqual(denied.status_code, 403)
+                    denied_list = await client.get("/products/manage/", headers=headers)
+                    self.assertEqual(denied_list.status_code, 403)
 
 
 if __name__ == "__main__":

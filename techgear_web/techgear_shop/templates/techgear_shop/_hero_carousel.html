@@ -1,0 +1,49 @@
+{% load asset_tags %}
+<section class="hero-carousel" aria-label="Ideas para mejorar tu computador" aria-roledescription="carrusel" data-carousel>
+  <h1 class="sr-only">Componentes para tu próximo computador</h1>
+  <div class="carousel-track" id="hero-slides">
+    <section class="hero-slide hero-upgrade" aria-roledescription="diapositiva" aria-label="1 de 3" data-slide>
+      <div class="banner-copy">
+        <p class="eyebrow"><span class="status-dot"></span> TU PRÓXIMO NIVEL EMPIEZA AQUÍ</p>
+        <h2>Mejora una pieza.<br><span>Cámbialo todo.</span></h2>
+        <p class="banner-description">Más potencia para jugar, crear y trabajar. Encuentra el componente que le falta a tu próximo gran proyecto.</p>
+        <a class="button button-dark" href="#catalogo">Explorar componentes <span aria-hidden="true">↗</span></a>
+        <div class="banner-tags"><span>CPU</span><span>GPU</span><span>RAM</span><span>SSD</span></div>
+      </div>
+      <div class="banner-art" aria-hidden="true"><span class="art-index">01 / EL SIGUIENTE NIVEL</span><svg class="hardware-art" viewBox="0 0 520 370"><use href="{% asset_url 'techgear_shop/banners.svg' %}#processor"></use></svg><span class="art-caption">GRANDES IDEAS. MEJORES COMPONENTES.</span></div>
+    </section>
+    <section class="hero-slide hero-graphics" aria-roledescription="diapositiva" aria-label="2 de 3" aria-hidden="true" inert data-slide>
+      <div class="banner-copy">
+        <p class="eyebrow"><span class="status-dot"></span> CADA DETALLE CUENTA</p>
+        <h2>Tu mundo.<br><span>Con más detalle.</span></h2>
+        <p class="banner-description">Dale protagonismo a tus juegos y proyectos. Explora tarjetas gráficas NVIDIA y AMD y compara sus especificaciones.</p>
+        <a class="button button-dark" href="{% url 'shop:catalog' %}?category=Tarjetas%20gr%C3%A1ficas#catalogo">Explorar tarjetas gráficas <span aria-hidden="true">↗</span></a>
+        <div class="banner-tags"><span>NVIDIA</span><span>AMD</span><span>GDDR7</span></div>
+      </div>
+      <div class="banner-art" aria-hidden="true"><span class="art-index">02 / POTENCIA GRÁFICA</span><svg class="hardware-art" viewBox="0 0 520 370"><use href="{% asset_url 'techgear_shop/banners.svg' %}#graphics"></use></svg><span class="art-caption">ELIGE CÓMO QUIERES VERLO.</span></div>
+    </section>
+    <section class="hero-slide hero-build" aria-roledescription="diapositiva" aria-label="3 de 3" aria-hidden="true" inert data-slide>
+      <div class="banner-copy">
+        <p class="eyebrow"><span class="status-dot"></span> CONSTRUYE ALGO TUYO</p>
+        <h2>Una buena base.<br><span>Un gran equipo.</span></h2>
+        <p class="banner-description">Haz espacio para tus ideas. Gabinetes y refrigeración para dar forma a un computador con tu propio estilo.</p>
+        <a class="button button-dark" href="{% url 'shop:catalog' %}?category=Gabinetes#catalogo">Explorar gabinetes <span aria-hidden="true">↗</span></a>
+        <div class="banner-tags"><span>GABINETES</span><span>REFRIGERACIÓN</span></div>
+      </div>
+      <div class="banner-art" aria-hidden="true"><span class="art-index">03 / DISEÑA TU SETUP</span><svg class="hardware-art" viewBox="0 0 520 370"><use href="{% asset_url 'techgear_shop/banners.svg' %}#tower"></use></svg><span class="art-caption">PIEZA A PIEZA, A TU MANERA.</span></div>
+    </section>
+  </div>
+  <div class="carousel-controls" hidden data-carousel-controls>
+    <div class="carousel-pages" role="group" aria-label="Elegir banner">
+      <button type="button" aria-label="Banner 01: mejora tu computador" aria-current="true" data-slide-to="0">01</button>
+      <button type="button" aria-label="Banner 02: tarjetas gráficas" data-slide-to="1">02</button>
+      <button type="button" aria-label="Banner 03: gabinetes" data-slide-to="2">03</button>
+    </div>
+    <div class="carousel-navigation">
+      <button class="carousel-pause" type="button" aria-controls="hero-slides" data-carousel-pause>Pausar banners</button>
+      <button type="button" aria-label="Banner anterior" aria-controls="hero-slides" data-carousel-prev>←</button>
+      <button type="button" aria-label="Banner siguiente" aria-controls="hero-slides" data-carousel-next>→</button>
+    </div>
+  </div>
+  <p class="sr-only" aria-live="polite" aria-atomic="true" data-carousel-status></p>
+</section>

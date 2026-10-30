@@ -1,0 +1,3 @@
+{% extends 'techgear_shop/base.html' %}
+{% block title %}{{ error_title }} · Techgear{% endblock %}
+{% block content %}<div class="shell"><section class="empty-state page-error"><p class="eyebrow">NO ENCONTRAMOS LA PIEZA</p><h1>{{ error_title }}</h1><p>{{ error_message }}</p><a class="button button-dark" href="{% url 'shop:catalog' %}">Volver al catálogo <span aria-hidden="true">↗</span></a></section></div>{% endblock %}

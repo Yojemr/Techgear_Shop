@@ -1,0 +1,9 @@
+{% extends 'techgear_shop/base.html' %}
+{% block title %}{% if product %}Editar{% else %}Nuevo{% endif %} producto · Techgear{% endblock %}
+{% block content %}
+<div class="shell dashboard">
+  <a class="back-link" href="{% url 'shop:product_list' %}">← Volver a productos</a>
+  <header class="dashboard-heading"><div><p class="eyebrow">ADMINISTRACIÓN / PRODUCTOS</p><h1>{% if product %}Editar producto{% else %}Una nueva pieza{% endif %}<span class="brand-dot">.</span></h1><p>{% if product %}Actualiza la información de {{ product.name }}.{% else %}Agrega un componente al catálogo de la tienda.{% endif %}</p></div></header>
+  {% include 'techgear_shop/dashboard/_product_editor.html' %}
+</div>
+{% endblock %}
