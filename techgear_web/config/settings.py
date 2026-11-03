@@ -15,12 +15,32 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
 if not SECRET_KEY:
     raise ImproperlyConfigured("Define DJANGO_SECRET_KEY en el entorno o en .env")
 
-DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
+# Vercel es un entorno publicado: una variable de desarrollo no puede activar el depurador.
+IS_VERCEL = os.environ.get("VERCEL") == "1"
+DEBUG = not IS_VERCEL and os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
 ALLOWED_HOSTS = [
     host.strip()
-    for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+    for host in os.environ.get(
+        "DJANGO_ALLOWED_HOSTS", "" if IS_VERCEL else "127.0.0.1,localhost"
+    ).split(",")
     if host.strip()
 ]
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip().rstrip("/")
+    for origin in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+if IS_VERCEL:
+    # Dominios proporcionados por la plataforma; no aceptar cualquier subdominio de Vercel.
+    for variable in ("VERCEL_URL", "VERCEL_PROJECT_PRODUCTION_URL"):
+        hostname = os.environ.get(variable, "").strip()
+        if hostname and hostname not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(hostname)
+        if hostname and f"https://{hostname}" not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(f"https://{hostname}")
+    # Vercel termina TLS y comunica el protocolo original al proceso de Django.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 TECHGEAR_API_URL = os.environ.get("TECHGEAR_API_URL", "http://127.0.0.1:8001").rstrip("/")
 TECHGEAR_API_TIMEOUT = 8.0
 api_url = urlsplit(TECHGEAR_API_URL)
@@ -35,6 +55,12 @@ if (
     or (api_url.scheme == "http" and api_url.hostname not in ("localhost", "127.0.0.1", "::1"))
 ):
     raise ImproperlyConfigured("TECHGEAR_API_URL debe ser HTTPS o HTTP local sin credenciales.")
+if IS_VERCEL and (
+    api_url.scheme != "https" or api_url.hostname in ("localhost", "127.0.0.1", "::1")
+):
+    raise ImproperlyConfigured(
+        "En Vercel, TECHGEAR_API_URL debe ser la URL HTTPS pública de la API."
+    )
 
 INSTALLED_APPS = [
     "config.apps.MongoAdminConfig",
@@ -105,7 +131,9 @@ LANGUAGE_CODE = "es-co"
 TIME_ZONE = "America/Bogota"
 USE_I18N = True
 USE_TZ = True
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+# Vercel ejecuta collectstatic al compilar y publica este directorio mediante su CDN.
+STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django_mongodb_backend.fields.ObjectIdAutoField"
 DATABASE_ROUTERS = ["django_mongodb_backend.routers.MongoRouter"]
 # La configuración no ejecuta migraciones: la preparación se realiza mediante comando explícito.

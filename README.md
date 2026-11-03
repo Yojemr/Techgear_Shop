@@ -184,6 +184,41 @@ Antes de probarlo, confirma que el usuario de base de datos de Atlas tenga permi
 
 El plan gratuito de Render puede suspender el servicio tras inactividad y tardar en despertar al recibir la siguiente solicitud. Es adecuado para demostración académica, no para una tienda en producción. La instancia gratuita de Render no permite ejecutar tareas de una sola vez desde su panel; prepara el índice y crea la cuenta administrativa desde tu computador con `.env` local apuntando a Atlas.
 
+## Despliegue de la web en Vercel
+
+La web se despliega como un proyecto Django independiente; la API conserva su servicio de Render. Al importar este repositorio en Vercel, configura:
+
+| Campo | Valor |
+| --- | --- |
+| Root Directory | `techgear_web` |
+| Framework Preset | `Django` |
+| Install Command | Automático; usa `requirements.txt`. |
+| Build Command | Automático; Django recopila los archivos estáticos. |
+| Output Directory | Predeterminado de Django, sin reemplazo manual. |
+| Python | `3.14`, definido en `.python-version`. |
+
+El archivo `techgear_web/vercel.json` fija el framework Django. Vercel descubre `manage.py`, utiliza `config.wsgi.application` y publica los archivos de `STATIC_ROOT` en `/static/`. No se necesitan un servicio adicional en la raíz, una carpeta `api/` ni un rewrite global.
+
+Configura estas variables en el panel de Vercel para los entornos que vayas a desplegar. No escribas claves o URI privadas en `vercel.json`:
+
+| Variable | Valor |
+| --- | --- |
+| `DJANGO_SECRET_KEY` | Una clave privada aleatoria y estable entre despliegues. |
+| `DJANGO_DEBUG` | `False`. Vercel también fuerza su desactivación desde la configuración. |
+| `TECHGEAR_API_URL` | La URL pública HTTPS del servicio FastAPI en Render. |
+| `MONGO_URI` | La URI privada de Atlas utilizada por este proyecto. |
+| `MONGO_DB_NAME` | `techgear_shop`. |
+| `DJANGO_ALLOWED_HOSTS` | Dominios propios adicionales, separados por comas y sin `https://`, si se utilizan. |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | Orígenes HTTPS propios adicionales, separados por comas, si se utilizan. |
+
+Los dominios exactos de producción y del despliegue se incorporan desde `VERCEL_PROJECT_PRODUCTION_URL` y `VERCEL_URL`, cuando Vercel expone sus variables de sistema. Si están desactivadas, configura el dominio de la tienda manualmente en las dos variables anteriores. No se habilita un comodín para todos los dominios de Vercel.
+
+Mantén habilitada la conexión a Atlas para las sesiones de Django. La recopilación de archivos estáticos no necesita consultar MongoDB ni ejecutar migraciones. Si las sesiones aún no se prepararon, realiza el comando explícito indicado en la sección de sesiones; no lo agregues al build de Vercel.
+
+Después del despliegue, comprueba `/salud/`, `/`, `/ingresar/` y los recursos `/static/techgear_shop/css/store.css` y `/static/techgear_shop/js/store.js`. El acceso administrativo debe mantener las sesiones, las cookies HTTPS y la validación CSRF. La API debe responder desde Render para que se muestre el catálogo.
+
+Referencias: [Django en Vercel](https://vercel.com/docs/frameworks/full-stack/django), [versiones de Python](https://vercel.com/docs/functions/runtimes/python) y [variables de sistema](https://vercel.com/docs/environment-variables/system-environment-variables).
+
 ## Pruebas y calidad
 
 Desde la raíz del repositorio:

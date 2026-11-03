@@ -29,6 +29,7 @@ LUNA.md
 /render.yaml
 /render.yml
 .codex/
+.vercel/
 .agents/
 .claude/
 .cursor/
