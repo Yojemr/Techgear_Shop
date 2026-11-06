@@ -4,7 +4,7 @@ import unittest
 from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
 from app.api.orders import create_order, update_order_status
 from app.schemas.order import OrderCreate, OrderStatus, OrderStatusUpdate
@@ -29,6 +29,8 @@ class OrderOperationTests(unittest.IsolatedAsyncioTestCase):
     """Protege el inventario y la devolución al cancelar antes del envío."""
 
     def setUp(self):
+        patch("app.api.orders.release_expired_carts", new=AsyncMock()).start()
+        self.addCleanup(patch.stopall)
         self.customer_id = ObjectId()
         self.product_id = ObjectId()
         self.order_id = ObjectId()
@@ -42,7 +44,7 @@ class OrderOperationTests(unittest.IsolatedAsyncioTestCase):
         }
         self.products = SimpleNamespace(
             find_one=AsyncMock(return_value=self.product),
-            update_one=AsyncMock(return_value=SimpleNamespace(modified_count=1)),
+            update_one=AsyncMock(return_value=SimpleNamespace(modified_count=1, matched_count=1)),
         )
         self.orders = SimpleNamespace(
             insert_one=AsyncMock(),
@@ -52,7 +54,7 @@ class OrderOperationTests(unittest.IsolatedAsyncioTestCase):
         self.database = SimpleNamespace(
             products=self.products,
             orders=self.orders,
-            client=SimpleNamespace(start_session=AsyncMock(return_value=FakeSession())),
+            client=SimpleNamespace(start_session=Mock(return_value=FakeSession())),
         )
         self.customer = {"_id": self.customer_id, "role": "customer"}
 

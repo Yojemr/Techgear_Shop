@@ -26,6 +26,7 @@
         <button type="submit" aria-label="Buscar">Buscar <span aria-hidden="true">↗</span></button>
       </form>
       <div class="account-nav">
+        <a class="cart-toggle" href="{% url 'shop:cart' %}" data-cart-open aria-label="Abrir carrito" aria-controls="cart-drawer" aria-haspopup="dialog"><svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#cart"></use></svg><span>Carrito</span><span class="cart-count" data-cart-count>{{ shop_cart_count }}</span></a>
         {% if shop_account %}
           <details class="account-menu">
             <summary><svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#user"></use></svg><span>{{ shop_account.full_name|truncatechars:20 }}</span></summary>
@@ -33,6 +34,7 @@
               <strong>{{ shop_account.full_name }}</strong>
               <span>{{ shop_account.email }}</span>
               <small>{% if shop_account.role == 'admin' %}Administrador{% else %}Cliente{% endif %}</small>
+              <a class="account-orders" href="{% url 'shop:orders' %}">Mis pedidos ↗</a>
               <form action="{% url 'shop:logout' %}" method="post">{% csrf_token %}<button type="submit">Cerrar sesión <span aria-hidden="true">↗</span></button></form>
             </div>
           </details>
@@ -48,7 +50,7 @@
       <a href="{% url 'shop:catalog' %}"{% if request.resolver_match.url_name == 'catalog' and not has_filters %} class="selected" aria-current="page"{% endif %}><svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#home"></use></svg><span>Inicio</span></a>
       <a href="{% url 'shop:catalog' %}#catalogo"{% if has_filters or request.resolver_match.url_name == 'product_detail' %} class="selected" aria-current="location"{% endif %}><svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#catalog"></use></svg><span>Catálogo</span></a>
       {% if shop_account.role == 'admin' %}
-      <a href="{% url 'shop:product_list' %}"{% if request.resolver_match.url_name == 'product_list' or request.resolver_match.url_name == 'product_create' or request.resolver_match.url_name == 'product_edit' or request.resolver_match.url_name == 'product_delete' %} class="selected" aria-current="page"{% endif %}><svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#board"></use></svg><span>Administración</span></a>
+      <a href="{% url 'shop:product_list' %}"{% if request.resolver_match.url_name == 'managed_orders' or request.resolver_match.url_name == 'managed_order_detail' or request.resolver_match.url_name == 'product_list' or request.resolver_match.url_name == 'product_create' or request.resolver_match.url_name == 'product_edit' or request.resolver_match.url_name == 'product_delete' %} class="selected" aria-current="page"{% endif %}><svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#board"></use></svg><span>Administración</span></a>
       {% endif %}
     </div>
   </nav>
@@ -57,6 +59,12 @@
     {% if shop_auth_unavailable %}<div class="shell"><p class="notice" role="status">No pudimos verificar tu sesión. Intenta de nuevo en unos momentos.</p></div>{% endif %}
     {% block content %}{% endblock %}
   </main>
+  {# El diálogo nativo conserva el foco dentro del panel y permite cerrarlo con Escape. #}
+  <dialog id="cart-drawer" class="cart-drawer" aria-labelledby="cart-title" data-cart-url="{% url 'shop:cart' %}">
+    <header class="cart-drawer-heading"><div><span class="eyebrow">TUS PRÓXIMAS PIEZAS</span><h2 id="cart-title" tabindex="-1">Tu carrito.</h2></div><button type="button" class="modal-close" data-cart-close aria-label="Cerrar carrito">×</button></header>
+    <p class="cart-feedback" data-cart-feedback role="status" hidden></p><div class="cart-drawer-content" data-cart-content></div>
+  </dialog>
+  {% if shop_account %}<form hidden data-cart-presence action="{% url 'shop:cart_heartbeat' %}" method="post">{% csrf_token %}</form>{% endif %}
   <footer class="site-footer">
     <div class="shell footer-inner">
       <div><a class="brand footer-brand" href="{% url 'shop:catalog' %}">techgear<span class="brand-dot">.</span></a><p>El siguiente nivel está en los detalles.</p></div>

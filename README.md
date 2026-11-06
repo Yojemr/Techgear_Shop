@@ -22,7 +22,7 @@ Taller 2 de APIs: tienda de hardware y accesorios tecnológicos con FastAPI, Dja
 - Contraseñas almacenadas como hash Argon2. El inicio de sesión emite tokens Bearer de duración limitada.
 - CRUD administrativo de productos. Las consultas públicas muestran solo productos activos; el borrado es lógico para conservar pedidos históricos.
 - Creación de pedidos autenticados: el servidor determina cliente y precios, conserva copia del SKU, nombre y precio, calcula subtotales con `Decimal` y descuenta stock.
-- Las existencias se descuentan al confirmar el pedido, no al cambiar el carrito. Si una compra falla por disponibilidad, la transacción no guarda pedido ni descuentos parciales.
+- El carrito reserva existencias reales al añadir productos; las otras cuentas solo pueden reservar las unidades restantes. Actualizar, retirar y vaciar modifica stock y carrito en una transacción. Confirmar convierte la reserva en pedido sin volver a descontar inventario.
 - Los administradores pueden avanzar estados secuenciales. Cancelar un pedido confirmado o en preparación devuelve las existencias; después de enviado no se puede cancelar.
 - No se integran pagos, transportadoras ni otros terceros.
 
@@ -90,7 +90,7 @@ Con ambos servidores encendidos, abre el [catálogo local](http://127.0.0.1:8000
 
 El login recibe correo y contraseña, consulta FastAPI y guarda el JWT en la sesión del servidor. El navegador recibe una cookie HttpOnly, no el JWT. Cada petición autenticada verifica el perfil vigente en la API; las sesiones vencidas o rechazadas se eliminan. El cierre de sesión utiliza POST y protección CSRF. No se duplican clientes mediante los usuarios nativos de Django.
 
-La interfaz permite consultar, buscar, ordenar y filtrar componentes, ver sus especificaciones e iniciar o cerrar sesión. Esta etapa no incorpora carrito ni confirmación de compras desde el frontend. Las cuentas existentes de la API sirven para ingresar; el registro sigue disponible en POST /auth/register.
+La interfaz permite consultar, buscar, ordenar y filtrar componentes, ver especificaciones y sugerencias, registrarse, iniciar o cerrar sesión y preparar pedidos. Las fichas públicas usan URLs con nombre y referencia. El carrito lateral permite acumular productos, cambiar cantidades, revisar subtotales y confirmar el pedido sin pagos. `/registro/`, `/ingresar/`, `/carrito/` y `/pedidos/` completan el recorrido de la cuenta.
 
 ## Administración de productos
 
@@ -184,6 +184,30 @@ Antes de probarlo, confirma que el usuario de base de datos de Atlas tenga permi
 
 El plan gratuito de Render puede suspender el servicio tras inactividad y tardar en despertar al recibir la siguiente solicitud. Es adecuado para demostración académica, no para una tienda en producción. La instancia gratuita de Render no permite ejecutar tareas de una sola vez desde su panel; prepara el índice y crea la cuenta administrativa desde tu computador con `.env` local apuntando a Atlas.
 
+## Carrito y reservas
+
+- Los visitantes pueden guardar productos y cantidades en la sesión de Django sin reservar ni descontar inventario. Al confirmar se les dirige a iniciar sesión.
+- Al ingresar, la API intenta reservar toda la selección en una transacción. Si falta stock, conserva la selección editable sin descuentos parciales; el usuario puede ajustarla y volver a reservar.
+- `products.stock` representa unidades disponibles, excluyendo las reservadas.
+- La edición administrativa envía `expected_stock` con las existencias que mostró el formulario. `PUT /products/{id}` responde 412 si una reserva, compra o devolución cambió ese valor; hay que volver a abrir la ficha antes de guardar. La comprobación y la actualización son atómicas, evitando sobrescribir reservas con un formulario antiguo.
+- `carts` contiene un documento por cuenta con cantidades, versión y vencimiento de la reserva. Precios e identidad se determinan en FastAPI.
+- Quitar productos, vaciar el carrito y cerrar sesión devuelve existencias. Un cierre de sesión fallido conserva la sesión para poder reintentar la devolución.
+- Las pestañas autenticadas envían presencia cada 30 segundos. Sin señal durante 120 segundos, la reserva vence; la siguiente consulta al catálogo, carrito o compra la libera transaccionalmente. Navegar entre páginas y mantener otra pestaña conectada conserva la reserva. Una desconexión prolongada o la suspensión del navegador también puede liberarla.
+- El vencimiento de la reserva no cierra la cuenta ni renueva la duración del JWT. Al volver a abrir la tienda se conserva la sesión mientras siga vigente, con carrito vacío si la reserva venció.
+- La confirmación compara versión y total, conserva los precios históricos y admite reintentos de la misma versión sin duplicar pedidos. No existe pago ni estado «pagado».
+- La limpieza es diferida y no necesita un proceso residente en Vercel. No debe crearse un índice TTL que borre reservas sin devolver stock.
+- La preparación explícita de la API (`python -m app.db.mongodb --initialize`) incluye `carts` y su índice de vencimiento. No se ejecuta automáticamente al arrancar o durante el build.
+
+| Ruta de la API | Operación |
+| --- | --- |
+| `GET /cart/` | Consultar carrito propio y totales. |
+| `POST /cart/items/{id}` | Añadir unidades y reservarlas. |
+| `PUT /cart/items/{id}` | Fijar cantidad; cero elimina la línea. |
+| `DELETE /cart/` | Vaciar y devolver reservas. |
+| `POST /cart/import` | Reservar la selección de visitante después de autenticar, sin duplicar reintentos. |
+| `POST /cart/heartbeat` | Renovar la reserva mientras la tienda siga abierta. |
+| `POST /cart/checkout` | Confirmar sin cobrar ni descontar dos veces. |
+
 ## Despliegue de la web en Vercel
 
 La web se despliega como un proyecto Django independiente; la API conserva su servicio de Render. Al importar este repositorio en Vercel, configura:
@@ -215,7 +239,7 @@ Los dominios exactos de producción y del despliegue se incorporan desde `VERCEL
 
 Mantén habilitada la conexión a Atlas para las sesiones de Django. La recopilación de archivos estáticos no necesita consultar MongoDB ni ejecutar migraciones. Si las sesiones aún no se prepararon, realiza el comando explícito indicado en la sección de sesiones; no lo agregues al build de Vercel.
 
-Después del despliegue, comprueba `/salud/`, `/`, `/ingresar/` y los recursos `/static/techgear_shop/css/store.css` y `/static/techgear_shop/js/store.js`. El acceso administrativo debe mantener las sesiones, las cookies HTTPS y la validación CSRF. La API debe responder desde Render para que se muestre el catálogo.
+Después del despliegue, comprueba `/salud/`, `/`, `/registro/`, `/ingresar/`, `/carrito/` y los recursos `/static/techgear_shop/css/store.css` y `/static/techgear_shop/js/store.js`. El acceso administrativo debe mantener las sesiones, las cookies HTTPS y la validación CSRF. La API debe responder desde Render para que se muestre el catálogo.
 
 Referencias: [Django en Vercel](https://vercel.com/docs/frameworks/full-stack/django), [versiones de Python](https://vercel.com/docs/functions/runtimes/python) y [variables de sistema](https://vercel.com/docs/environment-variables/system-environment-variables).
 
@@ -248,3 +272,18 @@ El taller avanza secuencialmente en `main`, con un solo commit por clase y mensa
 Se conserva Django como interfaz MVT que consumirá FastAPI por HTTP. Las cuentas de clientes, productos y pedidos se administran centralmente en la API; no se duplican usuarios con el modelo nativo de Django. La configuración inicial de componentes internos de Django utiliza `django-mongodb-backend` 6.1.x sin ejecutar migraciones en esta etapa.
 
 La configuración sigue la [guía oficial de MongoDB](https://www.mongodb.com/docs/languages/python/django-mongodb/current/) y la [plantilla oficial, revisión 3c0170f](https://github.com/mongodb-labs/django-mongodb-project/tree/3c0170f6e6f9d110123e17e91d3c30c928c5dc0b).
+
+
+### Gestión de pedidos
+
+En la web, una cuenta administradora accede a **Administración → Pedidos de clientes**
+(`/gestion/pedidos/`). Puede filtrar por estado, revisar cliente, componentes, cantidades y
+precios históricos, aceptar y preparar, marcar envío y entrega, rechazar antes del envío o
+registrar la devolución completa después de la entrega. Rechazar y devolver reponen las
+unidades una sola vez mediante una transacción de MongoDB. No se registran pagos ni reembolsos.
+
+Los cambios de estado y mensajes de **Notificar al cliente** aparecen en el detalle de
+**Mis pedidos** de su propietario; no se envían correos ni mensajes a servicios externos.
+Las notificaciones admiten reintentos sin duplicarse. Los pedidos anteriores sin historial
+siguen siendo compatibles. Las operaciones administrativas requieren rol de administrador
+en FastAPI y formularios con protección CSRF en Django.

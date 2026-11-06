@@ -1,0 +1,2 @@
+{% load shop_tags %}
+<section class="order-updates" aria-labelledby="updates-heading"><h2 id="updates-heading">Novedades del pedido</h2>{% if order.updates %}<ol>{% for update in order.updates reversed %}<li><time datetime="{{ update.created_at }}">{{ update.created_at|order_date }}</time><p>{{ update.message|linebreaksbr }}</p></li>{% endfor %}</ol>{% else %}<p class="receipt-note">Aún no hay novedades. Los cambios de estado y mensajes de la tienda aparecerán aquí.</p>{% endif %}</section>

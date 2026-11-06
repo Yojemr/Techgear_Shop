@@ -3,6 +3,7 @@
 {% block title %}Productos · Administración · Techgear{% endblock %}
 {% block content %}
 <div class="shell dashboard">
+  {% include "techgear_shop/dashboard/_navigation.html" %}
   <header class="dashboard-heading">
     <div><p class="eyebrow">ADMINISTRACIÓN / CATÁLOGO</p><h1>Tus componentes<span class="brand-dot">.</span></h1><p>Gestiona las piezas que hacen parte de Techgear.</p></div>
     <a class="button button-dark" href="{% url 'shop:product_create' %}">Nuevo producto <span aria-hidden="true">+</span></a>

@@ -1,0 +1,19 @@
+{% load shop_tags %}
+{% if cart_notice %}<p class="notice" role="status">{{ cart_notice }}</p>{% endif %}
+{% if cart.items or pending_cart.items %}
+{% if shop_account %}
+  {% if cart.items %}<p class="cart-reservation">Reservamos estas piezas mientras tengas la tienda abierta. Si cierras sesión o se pierde la conexión durante unos dos minutos, volverán al inventario.</p>{% include 'techgear_shop/_cart_lines.html' with line_cart=cart bucket='reserved' %}{% endif %}
+  {% if pending_cart.items %}<h3>Selección pendiente de reservar</h3><p class="cart-reservation">Estas piezas todavía no descuentan inventario. Ajusta las cantidades y reserva tu selección para continuar.</p>{% include 'techgear_shop/_cart_lines.html' with line_cart=pending_cart bucket='pending' %}<form method="post" action="{% url 'shop:cart_reserve' %}" data-cart-form>{% csrf_token %}<button type="submit" class="button button-dark cart-confirm">Reservar selección</button></form>{% endif %}
+{% else %}
+  <p class="cart-reservation">Tu selección aún no reserva inventario. Al confirmar te pediremos iniciar sesión y comprobaremos las existencias.</p>
+  {% include 'techgear_shop/_cart_lines.html' with line_cart=cart bucket='pending' %}
+{% endif %}
+<div class="cart-summary">
+{% if cart.items %}<p><span>{% if shop_account %}Subtotal reservado{% else %}Subtotal estimado{% endif %} · {{ cart.count }} unidad{{ cart.count|pluralize:'es' }}</span><strong>{{ cart.total|cop }}</strong></p>{% endif %}
+{% if pending_cart.items %}<p><span>Selección sin reservar</span><strong>{{ pending_cart.total|cop }}</strong></p>{% endif %}
+{% if not pending_cart.items %}<p class="cart-grand-total"><span>{% if shop_account %}Total en COP{% else %}Total estimado en COP{% endif %}</span><strong>{{ cart.total|cop }}</strong></p><small>Confirmar registra el pedido. No se realiza ningún cobro.</small>
+<form method="post" action="{% url 'shop:checkout' %}" data-checkout-form>{% csrf_token %}<input type="hidden" name="version" value="{{ cart.version|default:'' }}"><input type="hidden" name="expected_total" value="{{ cart.total|stringformat:'.2f' }}"><button type="submit" class="button button-dark cart-confirm">Confirmar pedido <span aria-hidden="true">↗</span></button></form>{% endif %}
+<form method="post" action="{% url 'shop:cart_clear' %}" data-cart-form>{% csrf_token %}<button class="cart-secondary" type="submit">Vaciar carrito{% if shop_account %} y devolver productos{% endif %}</button></form></div>
+{% else %}
+<div class="cart-empty"><span class="eyebrow">CADA GRAN EQUIPO EMPIEZA CON UNA PIEZA</span><h3>Tu carrito está vacío.</h3><p>Explora el catálogo y agrega los componentes que necesitas.</p><a class="button button-dark" href="{% url 'shop:catalog' %}#catalogo">Explorar componentes ↗</a>{% if not shop_account %}<a class="cart-secondary" href="{% url 'shop:register' %}?next={% url 'shop:cart' %}">Crear una cuenta</a>{% endif %}</div>
+{% endif %}

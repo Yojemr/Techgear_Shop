@@ -18,6 +18,7 @@ class OrderStatus(StrEnum):
     SHIPPED = "shipped"
     DELIVERED = "delivered"
     CANCELLED = "cancelled"
+    RETURNED = "returned"
 
 
 class OrderItemCreate(BaseModel):
@@ -53,6 +54,23 @@ class OrderItemRead(OrderItemCreate):
         return self
 
 
+class OrderUpdate(BaseModel):
+    """Novedad interna visible para el propietario; nunca contiene credenciales."""
+
+    model_config = ConfigDict(extra="forbid")
+    id: MongoId
+    message: Annotated[NonEmptyText, Field(max_length=1200)]
+    created_at: AwareDatetime
+    status: OrderStatus | None = None
+
+
+class OrderCustomer(BaseModel):
+    """Datos mínimos de contacto, disponibles únicamente al administrador."""
+
+    full_name: str
+    email: str
+
+
 class OrderRead(BaseModel):
     """Pedido persistido con fecha zonificada, cliente y total consistente."""
 
@@ -65,6 +83,8 @@ class OrderRead(BaseModel):
     currency: Literal["COP"] = "COP"
     created_at: AwareDatetime
     status: OrderStatus = OrderStatus.CONFIRMED
+    updates: list[OrderUpdate] = Field(default_factory=list)
+    customer: OrderCustomer | None = None
 
     @model_validator(mode="after")
     def validate_total(self) -> Self:
@@ -80,3 +100,14 @@ class OrderStatusUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     status: OrderStatus
+
+    expected_status: OrderStatus | None = None
+    message: Annotated[str, Field(max_length=1000)] = ""
+
+
+class OrderNotification(BaseModel):
+    """El identificador permite reintentar sin publicar dos veces el mismo mensaje."""
+
+    model_config = ConfigDict(extra="forbid")
+    request_id: MongoId
+    message: Annotated[NonEmptyText, Field(min_length=3, max_length=1000)]

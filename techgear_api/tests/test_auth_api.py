@@ -3,7 +3,7 @@
 import unittest
 from contextlib import asynccontextmanager
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from app.core.config import Settings
 from app.core.security import hash_password
@@ -77,6 +77,10 @@ class MemoryProducts:
 
 class AuthApiTests(unittest.IsolatedAsyncioTestCase):
     """Comprueba el contrato público y que el perfil no exponga hashes."""
+
+    def setUp(self):
+        patch("app.api.products.release_expired_carts", new=AsyncMock()).start()
+        self.addCleanup(patch.stopall)
 
     async def test_register_login_and_profile(self):
         database = SimpleNamespace(users=MemoryUsers())
@@ -245,7 +249,7 @@ class AuthApiTests(unittest.IsolatedAsyncioTestCase):
                     self.assertEqual(read.status_code, 200)
                     changed = await client.put(
                         f"/products/{product_id}",
-                        json=product | {"price": "130000.00"},
+                        json=product | {"price": "130000.00", "expected_stock": 4},
                         headers=headers,
                     )
                     self.assertEqual(changed.status_code, 200)
@@ -260,7 +264,9 @@ class AuthApiTests(unittest.IsolatedAsyncioTestCase):
                     anonymous_read = await client.get(f"/products/manage/{product_id}")
                     self.assertEqual(anonymous_read.status_code, 401)
                     restored = await client.put(
-                        f"/products/{product_id}", json=product | {"active": True}, headers=headers
+                        f"/products/{product_id}",
+                        json=product | {"active": True, "expected_stock": 4},
+                        headers=headers,
                     )
                     self.assertEqual(restored.status_code, 200)
                     self.assertTrue(restored.json()["active"])

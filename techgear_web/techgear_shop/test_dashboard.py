@@ -18,6 +18,7 @@ DATA = {
     "specifications": "Socket: AM5\nNúcleos: 6",
     "price": "100.25",
     "stock": "5",
+    "expected_stock": "5",
     "active": "on",
 }
 DATA.pop("id")
@@ -127,6 +128,25 @@ class DashboardTests(SimpleTestCase):
         response = self.client.post(f"/gestion/productos/{PRODUCT.id}/editar/", DATA)
         self.assertEqual(response.status_code, 302)
         self.assertTrue(self.api.save_product.call_args.args[0]["active"])
+
+    def test_edit_keeps_original_stock_and_refuses_a_missing_snapshot(self):
+        url = f"/gestion/productos/{PRODUCT.id}/editar/"
+        response = self.client.get(url + "?modal=1")
+        self.assertIn('name="product-expected_stock" value="5"', response.json()["html"])
+        # El POST incluye el valor original de la ficha, no el stock recién leído por la vista.
+        self.api.managed_product.return_value = replace(PRODUCT, stock=2)
+        self.api.save_product.side_effect = ApiError(
+            412, "El inventario cambió. Abre de nuevo la edición."
+        )
+        response = self.client.post(url, DATA)
+        self.assertContains(response, "El inventario cambió.")
+        self.assertEqual(self.api.save_product.call_args.args[0]["expected_stock"], 5)
+        self.api.save_product.reset_mock()
+        response = self.client.post(
+            url, {key: value for key, value in DATA.items() if key != "expected_stock"}
+        )
+        self.assertIn("expected_stock", response.context["form"].errors)
+        self.api.save_product.assert_not_called()
 
     def test_delete_requires_confirmation_and_post(self):
         url = f"/gestion/productos/{PRODUCT.id}/desactivar/"
@@ -262,7 +282,7 @@ class DashboardHttpTests(SimpleTestCase):
             form = ProductForm(DATA)
             self.assertTrue(form.is_valid())
             client.save_product(form.payload(), "test-token")
-            client.save_product(form.payload(), "test-token", identifier=PRODUCT.id)
+            client.save_product(form.payload(for_update=True), "test-token", identifier=PRODUCT.id)
             client.deactivate_product(PRODUCT.id, "test-token")
         self.assertEqual([c.method for c in calls], ["GET", "GET", "POST", "PUT", "DELETE"])
         self.assertTrue(all(c.headers["Authorization"] == "Bearer test-token" for c in calls))

@@ -4,6 +4,8 @@ from decimal import Decimal
 
 from django import forms
 
+from .models import ORDER_STATES
+
 # Las categorías describen componentes de escritorio, no equipos completos ni periféricos.
 CATEGORIES = (
     ("Procesadores", "Procesadores", "cpu"),
@@ -108,6 +110,11 @@ class ProductForm(forms.Form):
         widget=forms.URLInput(attrs={"placeholder": "https://…"}),
     )
     active = forms.BooleanField(label="Visible en el catálogo", required=False, initial=True)
+    expected_stock = forms.IntegerField(required=False, min_value=0, widget=forms.HiddenInput)
+
+    def __init__(self, *args, require_stock_snapshot=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["expected_stock"].required = require_stock_snapshot
 
     def clean_specifications(self):
         """Convierte líneas a clave/valor y rechaza duplicados para evitar pérdida de datos."""
@@ -130,24 +137,28 @@ class ProductForm(forms.Form):
             raise forms.ValidationError("Incluye al menos una característica técnica.")
         return result
 
-    def payload(self):
+    def payload(self, *, for_update=False):
         """Conserva Decimal como texto JSON y entrega existencias como entero."""
         values = self.cleaned_data
-        return {
-            key: str(values[key]) if key == "price" else values[key]
-            for key in (
-                "sku",
-                "name",
-                "brand",
-                "category",
-                "description",
-                "specifications",
-                "price",
-                "stock",
-                "image_url",
-                "active",
-            )
-        } | {"currency": "COP"}
+        return (
+            {
+                key: str(values[key]) if key == "price" else values[key]
+                for key in (
+                    "sku",
+                    "name",
+                    "brand",
+                    "category",
+                    "description",
+                    "specifications",
+                    "price",
+                    "stock",
+                    "image_url",
+                    "active",
+                )
+            }
+            | {"currency": "COP"}
+            | ({"expected_stock": values["expected_stock"]} if for_update else {})
+        )
 
     @staticmethod
     def initial_for(product):
@@ -168,5 +179,79 @@ class ProductForm(forms.Form):
         } | {
             "specifications": "\n".join(
                 f"{key}: {value}" for key, value in product.specifications.items()
-            )
+            ),
+            "expected_stock": product.stock,
         }
+
+
+class RegisterForm(forms.Form):
+    full_name = forms.CharField(
+        label="Nombre completo",
+        max_length=200,
+        widget=forms.TextInput(attrs={"autocomplete": "name", "autofocus": True}),
+    )
+    email = forms.EmailField(
+        label="Correo electrónico",
+        max_length=254,
+        widget=forms.EmailInput(attrs={"autocomplete": "email"}),
+    )
+    password = forms.CharField(
+        label="Contraseña",
+        min_length=8,
+        max_length=128,
+        strip=False,
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+        help_text="Entre 8 y 128 caracteres.",
+    )
+    password_confirm = forms.CharField(
+        label="Repite la contraseña",
+        max_length=128,
+        strip=False,
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+    )
+
+    def clean(self):
+        values = super().clean()
+        if values.get("password") and values.get("password") != values.get("password_confirm"):
+            self.add_error("password_confirm", "Las contraseñas deben coincidir.")
+        return values
+
+
+class CartQuantityForm(forms.Form):
+    quantity = forms.IntegerField(min_value=0, max_value=99, label="Cantidad")
+
+
+class CheckoutForm(forms.Form):
+    version = forms.RegexField(regex=r"^[0-9a-f]{24}$")
+    expected_total = forms.DecimalField(min_value=Decimal("0"), max_digits=16, decimal_places=2)
+
+
+class OrderFilterForm(forms.Form):
+    state = forms.ChoiceField(
+        required=False,
+        label="Estado",
+        choices=[("", "Todos los estados")] + list(ORDER_STATES.items()),
+    )
+    page = forms.IntegerField(
+        required=False, min_value=1, max_value=10000, widget=forms.HiddenInput
+    )
+
+
+class OrderActionForm(forms.Form):
+    action = forms.ChoiceField(
+        choices=[(key, label) for key, label in ORDER_STATES.items()] + [("notify", "Notificar")]
+    )
+    expected_status = forms.ChoiceField(choices=list(ORDER_STATES.items()))
+    request_id = forms.RegexField(regex=r"^[0-9a-f]{24}$", widget=forms.HiddenInput)
+    message = forms.CharField(
+        required=False,
+        max_length=1000,
+        label="Mensaje para el cliente",
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("action") == "notify" and len(cleaned.get("message", "")) < 3:
+            self.add_error("message", "Escribe un mensaje de al menos tres caracteres.")
+        return cleaned

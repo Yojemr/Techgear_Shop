@@ -21,6 +21,8 @@ async def mongo_connection(settings: Settings) -> AsyncIterator[AsyncDatabase[di
         serverSelectionTimeoutMS=10000,
         connectTimeoutMS=10000,
         appname="Techgear_Shop",
+        # MongoDB guarda UTC: conservar la zona al leer pedidos y sus fechas.
+        tz_aware=True,
     )
     try:
         # Crear el cliente no verifica red ni credenciales; ping fuerza una operación.
@@ -35,12 +37,14 @@ async def mongo_connection(settings: Settings) -> AsyncIterator[AsyncDatabase[di
 
 async def initialize_database(database: AsyncDatabase[dict[str, Any]]) -> None:
     """Crea colecciones e índices idempotentes, sin insertar datos de negocio."""
-    for name in ("users", "products", "orders"):
+    for name in ("users", "products", "orders", "carts"):
         try:
             await database.create_collection(name)
         except CollectionInvalid:
             # Una colección existente permite repetir la preparación sin borrarla.
             pass
+    # No usar TTL: devolver stock y vaciar el carrito deben ser una sola transacción.
+    await database.carts.create_index("expires_at", name="cart_reservation_expiry")
     # El servidor aplica unicidad incluso cuando llegan dos registros simultáneos.
     await database.users.create_index("email", unique=True, name="unique_user_email")
     await database.products.create_index("sku", unique=True, name="unique_product_sku")
@@ -56,7 +60,7 @@ async def check_connection(initialize: bool = False) -> None:
             await initialize_database(database)
         print(f"Conexión correcta. Base: {database.name}")
         if initialize:
-            print("Colecciones users, products y orders; índices requeridos verificados.")
+            print("Colecciones users, products, orders y carts; índices requeridos verificados.")
 
 
 if __name__ == "__main__":

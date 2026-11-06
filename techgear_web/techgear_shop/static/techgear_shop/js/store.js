@@ -203,3 +203,177 @@ if (productModal && typeof productModal.showModal === "function") {
     }
   });
 }
+
+
+// El panel es una mejora del carrito HTML: las acciones siguen funcionando sin JavaScript.
+const cartDrawer = document.querySelector("#cart-drawer");
+if (cartDrawer && typeof cartDrawer.showModal === "function") {
+  const content = cartDrawer.querySelector("[data-cart-content]");
+  const feedback = cartDrawer.querySelector("[data-cart-feedback]");
+  const title = cartDrawer.querySelector("#cart-title");
+  let opener;
+  let busy = false;
+
+  function openCart(source) {
+    if (!cartDrawer.open) {
+      opener = source;
+      cartDrawer.showModal();
+      document.body.classList.add("cart-open");
+      title.focus();
+    }
+  }
+
+  function updateCart(result) {
+    // Solo se inserta HTML escapado y renderizado por Django en el mismo origen.
+    content.innerHTML = result.html;
+    document.querySelectorAll("[data-cart-count]").forEach((count) => { count.textContent = result.count; });
+    document.querySelectorAll("[data-stock-id]").forEach((label) => {
+      const quantity = result.stocks?.[label.dataset.stockId];
+      if (quantity === undefined) return;
+      label.classList.toggle("unavailable", quantity === 0);
+      const dot = document.createElement("span");
+      dot.className = "status-dot";
+      const text = quantity ? quantity + (label.dataset.stockKind === "detail" ? " unidades disponibles" : " disponibles") : "Sin existencias";
+      label.replaceChildren(dot, document.createTextNode(text));
+    });
+    document.querySelectorAll("[data-stock-button]").forEach((button) => {
+      const quantity = result.stocks?.[button.dataset.stockButton];
+      if (quantity !== undefined) button.disabled = quantity === 0;
+    });
+  }
+
+  function showCartError(message) {
+    feedback.textContent = message;
+    feedback.hidden = false;
+  }
+
+  async function cartRequest(url, options = {}) {
+    const controller = new AbortController();
+    // Incluir lectura del cuerpo en el plazo impide dejar el panel bloqueado por una conexión caída.
+    const timeout = window.setTimeout(() => controller.abort(), 15000);
+    try {
+      const response = await fetch(url, { credentials: "same-origin", ...options,
+        headers: { Accept: "application/json" }, signal: controller.signal });
+      if (!response.headers.get("content-type")?.includes("application/json")) {
+        throw new Error("No pudimos confirmar la operación. Revisa tu sesión y vuelve a abrir el carrito.");
+      }
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "No pudimos actualizar el carrito. Intenta de nuevo.");
+      return result;
+    } catch (error) {
+      if (error.name === "AbortError") {
+        throw new Error("La tienda tardó demasiado en responder. Vuelve a abrir el carrito para comprobar su estado.");
+      }
+      throw error;
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  }
+
+  document.querySelectorAll("[data-cart-open]").forEach((link) => {
+    link.addEventListener("click", async (event) => {
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      if (busy) return;
+      openCart(link);
+      feedback.hidden = true;
+      content.textContent = "Cargando tus piezas…";
+      busy = true;
+      content.setAttribute("aria-busy", "true");
+      try { updateCart(await cartRequest(cartDrawer.dataset.cartUrl)); }
+      catch (error) {
+        // Retirar el indicador, mostrar la causa y permitir reintentar sin recargar la página.
+        content.replaceChildren();
+        showCartError(error.message);
+        const retry = document.createElement("button");
+        retry.type = "button";
+        retry.className = "button button-light";
+        retry.textContent = "Volver a intentar";
+        retry.addEventListener("click", () => link.click());
+        content.append(retry);
+      } finally {
+        busy = false;
+        content.removeAttribute("aria-busy");
+      }
+    });
+  });
+
+  document.addEventListener("submit", async (event) => {
+    const form = event.target.closest("[data-cart-form]");
+    if (!form) return;
+    event.preventDefault();
+    if (busy) return;
+    // FormData conserva el token CSRF sin leer la cookie HttpOnly.
+    const payload = new FormData(form);
+    const source = event.submitter;
+    openCart(source);
+    feedback.hidden = true;
+    busy = true;
+    const controls = [...document.querySelectorAll("[data-cart-form] button, [data-checkout-form] button")];
+    controls.forEach((control) => { control.disabled = true; });
+    content.setAttribute("aria-busy", "true");
+    try {
+      const result = await cartRequest(form.action, { method: "POST", body: payload });
+      controls.forEach((control) => { control.disabled = false; });
+      updateCart(result);
+      title.focus();
+    } catch (error) {
+      // No repetir automáticamente escrituras: una respuesta perdida puede haberse aplicado.
+      controls.forEach((control) => { control.disabled = false; });
+      showCartError(error.message);
+    } finally {
+      busy = false;
+      // No reactivar un botón de producto que acaba de quedarse sin existencias.
+      controls.forEach((control) => {
+        if (!control.hasAttribute("data-stock-button")) control.disabled = false;
+      });
+      content.removeAttribute("aria-busy");
+    }
+  });
+
+  cartDrawer.querySelector("[data-cart-close]").addEventListener("click", () => {
+    if (!busy) cartDrawer.close();
+  });
+  cartDrawer.addEventListener("cancel", (event) => { if (busy) event.preventDefault(); });
+  cartDrawer.addEventListener("click", (event) => {
+    if (event.target === cartDrawer && !busy) {
+      const rect = cartDrawer.getBoundingClientRect();
+      if (event.clientX < rect.left || event.clientX > rect.right) cartDrawer.close();
+    }
+  });
+  cartDrawer.addEventListener("close", () => {
+    document.body.classList.remove("cart-open");
+    opener?.focus();
+    // La página completa se actualiza al cerrar para conservar etiquetas e identificadores únicos.
+    if (document.querySelector("[data-cart-page]")) window.location.reload();
+  });
+}
+
+// La presencia renueva reservas, no la autenticación. Sin pestañas, la reserva vence.
+const presenceForm = document.querySelector("[data-cart-presence]");
+if (presenceForm) {
+  let sending = false;
+  async function reportPresence() {
+    if (sending) return;
+    sending = true;
+    try {
+      const response = await fetch(presenceForm.action, { method: "POST",
+        credentials: "same-origin", headers: { Accept: "application/json" },
+        body: new FormData(presenceForm) });
+      if (!response.ok) return;
+      const result = await response.json();
+      document.querySelectorAll("[data-cart-count]").forEach((count) => { count.textContent = result.count; });
+    } catch { /* Una desconexión no dispara reintentos de compra ni borra la sesión. */ }
+    finally { sending = false; }
+  }
+  reportPresence();
+  window.setInterval(reportPresence, 30000);
+  window.addEventListener("pageshow", reportPresence);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) reportPresence(); });
+}
+
+// Deshabilitar el envío evita dobles clics; la API también garantiza la idempotencia.
+document.addEventListener("submit", (event) => {
+  const form = event.target.closest("[data-checkout-form]");
+  if (form) form.querySelectorAll("button").forEach((button) => { button.disabled = true; });
+});

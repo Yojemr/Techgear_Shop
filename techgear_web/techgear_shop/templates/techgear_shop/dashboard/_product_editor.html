@@ -1,5 +1,7 @@
 <form method="post" class="dashboard-panel product-editor"{% if modal %} data-modal-form{% endif %} action="{% if product %}{% url 'shop:product_edit' product.id %}{% if modal %}?modal=1{% endif %}{% else %}{% url 'shop:product_create' %}{% endif %}">
     {% csrf_token %}
+    {{ form.expected_stock }}
+    {% if form.expected_stock.errors %}<div class="form-error" role="alert">Abre de nuevo la edición para consultar las existencias actuales.</div>{% endif %}
     <div class="editor-fields">
     {% if form.non_field_errors %}<div class="form-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
     <section class="editor-section" aria-labelledby="identity-heading"><h2 id="identity-heading">Información del componente</h2><div class="editor-grid">

@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.api import auth, orders, products, users
+from app.api import auth, cart, orders, products, users
 from app.core.config import get_settings
 from app.db.mongodb import mongo_connection
 
@@ -34,6 +34,7 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(products.router)
 app.include_router(orders.router)
+app.include_router(cart.router)
 
 
 @app.get("/", tags=["Sistema"])

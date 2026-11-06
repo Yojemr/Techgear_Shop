@@ -1,0 +1,4 @@
+{% extends 'techgear_shop/base.html' %}
+{% load shop_tags %}
+{% block title %}Mis pedidos · Techgear{% endblock %}
+{% block content %}<div class="shell orders-page"><p class="eyebrow">LAS PIEZAS QUE ELEGISTE</p><h1>Mis pedidos.</h1><div class="order-list">{% for order in orders %}<article class="order-card"><div><span class="state-badge state-active">{{ order.status_label }}</span><h2>Pedido {{ order.id|slice:'-8:'|upper }}</h2><p>{{ order.items|length }} referencia{{ order.items|pluralize }}</p></div><strong>{{ order.total|cop }}</strong><a class="button button-light" href="{% url 'shop:order_detail' order.id %}">Ver pedido ↗</a></article>{% empty %}<div class="cart-empty"><h2>Aún no has hecho pedidos.</h2><p>Agrega tus componentes al carrito para comenzar.</p><a class="button button-dark" href="{% url 'shop:catalog' %}">Explorar componentes ↗</a></div>{% endfor %}</div></div>{% endblock %}

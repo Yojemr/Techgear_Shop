@@ -25,6 +25,7 @@
         <div class="form-field"><label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label><div class="password-field">{{ form.password }}<button class="password-toggle" type="button" aria-label="Mostrar contraseña" aria-controls="{{ form.password.id_for_label }}" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#eye"></use></svg></button></div>{% if form.password.errors %}<div class="field-error" role="alert">{{ form.password.errors }}</div>{% endif %}</div>
         <button class="button button-dark login-submit" type="submit">Entrar a mi cuenta <span aria-hidden="true">↗</span></button>
       </form>
+      <p class="auth-register">¿Aún no tienes cuenta? <a href="{% url 'shop:register' %}?next={{ next|urlencode }}">Crear una cuenta</a></p>
       <p class="auth-hint"><svg class="icon" aria-hidden="true"><use href="{% asset_url 'techgear_shop/icons.svg' %}#lock"></use></svg>Tu cuenta, a tu alcance. Cierra la sesión al terminar si usas un computador compartido.</p>
     </div>
   </section>

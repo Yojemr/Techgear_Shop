@@ -3,7 +3,9 @@
 import time
 from datetime import timedelta
 
+from django.contrib import messages
 from django.http import HttpResponse
+from django.middleware.csrf import rotate_token
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -12,7 +14,8 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters, sensitive_variables
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from .forms import CatalogFilterForm, LoginForm
+from . import guest_cart
+from .forms import CatalogFilterForm, LoginForm, RegisterForm
 from .services.api import ApiClient, ApiError
 
 
@@ -55,10 +58,11 @@ def catalog(request):
 
 @require_GET
 @never_cache
-def product_detail(request, product_id):
+def product_detail(request, product_slug):
     """Presenta la ficha de un componente activo; ninguna visita reserva existencias."""
     try:
-        product = ApiClient().product(product_id)
+        client = ApiClient()
+        product = client.product_by_slug(product_slug)
     except ApiError as error:
         return render(
             request,
@@ -71,7 +75,21 @@ def product_detail(request, product_id):
             },
             status=404 if error.status_code == 404 else 503,
         )
-    return render(request, "techgear_shop/product_detail.html", {"product": product})
+    try:
+        candidates = client.products()
+        others = [item for item in candidates if item.id != product.id and item.stock > 0]
+        others.sort(key=lambda item: (item.category != product.category, item.name))
+    except ApiError:
+        # Una caída de las sugerencias no debe impedir ver la ficha principal.
+        others = []
+    return render(
+        request,
+        "techgear_shop/product_detail.html",
+        {
+            "product": product,
+            "related_products": others[:4],
+        },
+    )
 
 
 def _safe_next(request):
@@ -103,11 +121,29 @@ def login_view(request):
             form.add_error(None, str(error))
         else:
             # flush elimina cualquier sesión previa y evita conservar un identificador fijado.
+            # Preservar solo la selección anónima; nunca arrastrar identidad o permisos previos.
+            pending = guest_cart.selection(request.session)
+            transfer = request.session.get(guest_cart.TRANSFER_KEY)
             request.session.flush()
+            if pending:
+                request.session[guest_cart.SELECTION_KEY] = pending
+                request.session[guest_cart.TRANSFER_KEY] = transfer
+            rotate_token(request)
             request.session["access_token"] = grant.access_token
             request.session["auth_expires_at"] = int(time.time()) + grant.expires_in
             # Usar fecha absoluta impide alargar el JWT al modificar la sesión más adelante.
             request.session.set_expiry(timezone.now() + timedelta(seconds=grant.expires_in))
+            try:
+                reserved = guest_cart.reserve(request.session, client, grant.access_token)
+                if reserved is not None:
+                    request.session["cart_count"] = reserved.count
+            except ApiError:
+                messages.warning(
+                    request,
+                    "Tu sesión está abierta, pero no pudimos reservar toda "
+                    "tu selección. Revisa los productos pendientes en el carrito.",
+                )
+                return redirect("shop:cart")
             return redirect(target)
     return render(
         request,
@@ -123,6 +159,30 @@ def login_view(request):
 @never_cache
 def logout_view(request):
     """Cierra esta sesión del servidor; el token de la API conserva su vencimiento original."""
+    if request.shop_auth_unavailable:
+        return render(
+            request,
+            "techgear_shop/error.html",
+            {
+                "error_title": "No pudimos cerrar la sesión",
+                "error_message": "Intenta de nuevo cuando podamos verificar tu cuenta.",
+            },
+            status=503,
+        )
+    if request.shop_account:
+        try:
+            # No se descarta el token hasta confirmar que la API devolvió las reservas.
+            ApiClient().clear_cart(request.session["access_token"])
+        except ApiError as error:
+            return render(
+                request,
+                "techgear_shop/error.html",
+                {
+                    "error_title": "No pudimos cerrar la sesión",
+                    "error_message": str(error),
+                },
+                status=503,
+            )
     request.session.flush()
     return redirect("shop:login")
 
@@ -131,3 +191,29 @@ def logout_view(request):
 def health(request):
     """Comprobación web ligera; no consulta la API ni MongoDB."""
     return HttpResponse("ok", content_type="text/plain")
+
+
+@require_http_methods(["GET", "POST"])
+@never_cache
+@sensitive_post_parameters("password", "password_confirm")
+def register_view(request):
+    """El alta pública solo crea clientes; no se aceptan permisos desde el formulario."""
+    if request.shop_account:
+        return redirect("shop:catalog")
+    form = RegisterForm(request.POST if request.method == "POST" else None)
+    target = _safe_next(request)
+    if request.method == "POST" and form.is_valid():
+        try:
+            ApiClient().register(
+                form.cleaned_data["full_name"],
+                form.cleaned_data["email"],
+                form.cleaned_data["password"],
+            )
+        except ApiError as error:
+            form.add_error(None, str(error))
+        else:
+            from urllib.parse import urlencode
+
+            messages.success(request, "Tu cuenta está lista. Inicia sesión para continuar.")
+            return redirect(reverse("shop:login") + "?" + urlencode({"next": target}))
+    return render(request, "techgear_shop/register.html", {"form": form, "next": target})

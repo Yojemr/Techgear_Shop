@@ -27,6 +27,12 @@ class ProductCreate(BaseModel):
     active: bool = True
 
 
+class ProductUpdate(ProductCreate):
+    """El stock leído al abrir la edición detecta reservas o devoluciones posteriores."""
+
+    expected_stock: Annotated[int, Field(ge=0, strict=True)]
+
+
 class ProductRead(ProductCreate):
     """Producto devuelto por la API, con el ObjectId serializado como texto."""
 

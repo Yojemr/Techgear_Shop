@@ -116,13 +116,18 @@ def product_form(request, product_id=None):
         request.POST if request.method == "POST" else None,
         initial=ProductForm.initial_for(product) if product else None,
         prefix="product" if modal else None,
+        require_stock_snapshot=product_id is not None,
     )
     if request.method == "POST" and form.is_valid():
         try:
-            client.save_product(form.payload(), token, identifier=product_id)
+            client.save_product(
+                form.payload(for_update=product_id is not None), token, identifier=product_id
+            )
         except ApiError as error:
             if error.status_code == 409:
                 form.add_error("sku", str(error))
+            elif error.status_code == 412:
+                form.add_error("stock", str(error))
             elif error.status_code in (400, 422):
                 form.add_error(None, "Revisa los datos: la API no pudo validarlos.")
             else:

@@ -1,0 +1,10 @@
+{% load shop_tags %}
+<ul class="cart-lines">
+{% for item in line_cart.items %}<li class="cart-line">
+{% if item.image_url %}<img src="{{ item.image_url }}" width="76" height="76" alt="" referrerpolicy="no-referrer">{% endif %}
+<div class="cart-line-info"><h3>{{ item.name }}</h3><p>{{ item.unit_price|cop }} / unidad</p>{% if not item.active %}<p class="field-error">Ya no está disponible. Retíralo para continuar.</p>{% endif %}
+{% if bucket == 'pending' and item.quantity > item.available_stock %}<p class="field-error">Solo hay {{ item.available_stock }} unidades disponibles para reservar.</p>{% endif %}
+<form method="post" action="{% url 'shop:cart_quantity' item.product_id %}" class="quantity-form" data-cart-form>{% csrf_token %}<input type="hidden" name="bucket" value="{{ bucket }}"><label class="sr-only" for="qty-{{ item.product_id }}-{{ bucket }}-{{ cart_dom_id }}">Cantidad de {{ item.name }}</label><input id="qty-{{ item.product_id }}-{{ bucket }}-{{ cart_dom_id }}" name="quantity" type="number" min="0" max="99" value="{{ item.quantity }}" required><button type="submit">Actualizar</button></form>
+<form method="post" action="{% url 'shop:cart_quantity' item.product_id %}" data-cart-form>{% csrf_token %}<input type="hidden" name="quantity" value="0"><input type="hidden" name="bucket" value="{{ bucket }}"><button class="cart-remove" type="submit" aria-label="Quitar {{ item.name }} del carrito">Quitar</button></form>
+</div><strong class="cart-line-total">{{ item.subtotal|cop }}</strong></li>{% endfor %}
+</ul>

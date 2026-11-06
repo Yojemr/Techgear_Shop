@@ -9,11 +9,15 @@
     <section class="detail-summary">
       <span class="eyebrow">{{ product.brand }} / {{ product.category }}</span><h1>{{ product.name }}</h1><p class="detail-description">{{ product.description }}</p>
       <div class="detail-price">{{ product.price|cop }} <span>COP</span></div><span class="price-note">Precio de referencia · pesos colombianos</span>
-      <div class="detail-stock availability {% if not product.stock %}unavailable{% endif %}"><span class="status-dot"></span>{% if product.stock %}{{ product.stock }} unidades disponibles{% else %}Sin existencias{% endif %}</div>
+      <div data-stock-id="{{ product.id }}" data-stock-kind="detail" class="detail-stock availability {% if not product.stock %}unavailable{% endif %}"><span class="status-dot"></span>{% if product.stock %}{{ product.stock }} unidades disponibles{% else %}Sin existencias{% endif %}</div>
       <p class="detail-sku">SKU {{ product.sku }}</p>
-      <a class="button button-dark" href="{% url 'shop:catalog' %}?category={{ product.category|urlencode }}#catalogo">Explorar esta categoría <span aria-hidden="true">↗</span></a>
+      {% if product.stock %}
+      <form method="post" action="{% url 'shop:cart_add' product.id %}" class="detail-cart-form" data-cart-form>{% csrf_token %}<div class="detail-quantity"><label for="detail-quantity">Cantidad</label><input type="number" id="detail-quantity" name="quantity" min="1" max="99" value="1" required></div><button class="button button-dark" data-stock-button="{{ product.id }}" type="submit">Agregar al carrito <span aria-hidden="true">+</span></button></form>
+      {% if not shop_account %}<p class="field-help">Puedes elegir tus piezas sin iniciar sesión. Se reservan al ingresar a tu cuenta.</p>{% endif %}
+      {% else %}<button class="button button-light" disabled>Sin existencias</button>{% endif %}
     </section>
   </div>
   <section class="specifications"><p class="eyebrow">CONOCE CADA DETALLE</p><h2>Especificaciones técnicas</h2><dl>{% for key, value in product.specifications.items %}<div><dt>{{ key }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl></section>
+  {% if related_products %}<section class="related-products" aria-labelledby="related-title"><div class="section-heading"><div><p class="eyebrow">SIGUE CONSTRUYENDO TU EQUIPO</p><h2 id="related-title">Otras piezas que pueden interesarte.</h2></div><a href="{% url 'shop:catalog' %}#catalogo" class="back-link">Ver catálogo ↗</a></div><div class="product-grid">{% for product in related_products %}{% include 'techgear_shop/_product_card.html' %}{% endfor %}</div></section>{% endif %}
 </div>
 {% endblock %}

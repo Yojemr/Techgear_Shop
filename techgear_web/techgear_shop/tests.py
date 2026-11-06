@@ -49,6 +49,7 @@ class StorefrontTests(SimpleTestCase):
         self.addCleanup(patch.stopall)
         self.client_api.products.return_value = [Product.from_payload(FAKE_PRODUCT)]
         self.client_api.product.return_value = Product.from_payload(FAKE_PRODUCT)
+        self.client_api.product_by_slug.return_value = Product.from_payload(FAKE_PRODUCT)
         self.client_api.login.return_value = TokenGrant("jwt-only-for-tests", 1800)
         self.client_api.profile.return_value = FAKE_PROFILE
         self.session_api.profile.return_value = FAKE_PROFILE
@@ -94,11 +95,14 @@ class StorefrontTests(SimpleTestCase):
         self.assertContains(response, "Volver a intentar", status_code=503)
 
     def test_detail_renders_specs_and_missing_product(self):
-        response = self.client.get("/componentes/" + FAKE_PRODUCT["id"] + "/")
+        response = self.client.get("/componentes/" + Product.from_payload(FAKE_PRODUCT).slug + "/")
         self.assertContains(response, "Especificaciones técnicas")
-        self.client_api.product.side_effect = ApiError(404, "Componente no encontrado.")
+        self.client_api.product_by_slug.side_effect = ApiError(404, "Componente no encontrado.")
         self.assertEqual(
-            self.client.get("/componentes/" + FAKE_PRODUCT["id"] + "/").status_code, 404
+            self.client.get(
+                "/componentes/" + Product.from_payload(FAKE_PRODUCT).slug + "/"
+            ).status_code,
+            404,
         )
 
     def test_login_keeps_jwt_on_server_and_rejects_external_next(self):

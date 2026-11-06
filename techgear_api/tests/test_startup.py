@@ -58,5 +58,28 @@ class AppTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(hasattr(app.state, "database"))
 
 
+class SessionContractTests(unittest.IsolatedAsyncioTestCase):
+    async def test_transaction_helper_uses_real_pymongo_session_without_awaiting_creation(self):
+        from types import SimpleNamespace
+
+        from app.services.cart import in_transaction
+        from pymongo import AsyncMongoClient
+        from pymongo.asynchronous.client_session import AsyncClientSession
+
+        client = AsyncMongoClient("mongodb://127.0.0.1:1", connect=False)
+        database = SimpleNamespace(client=client)
+        callback = AsyncMock(return_value="transaction-result")
+        try:
+            with patch.object(
+                AsyncClientSession, "with_transaction", new=AsyncMock()
+            ) as transaction:
+                transaction.return_value = "transaction-result"
+                result = await in_transaction(database, callback)
+                self.assertEqual(result, "transaction-result")
+                transaction.assert_awaited_once_with(callback)
+        finally:
+            await client.close()
+
+
 if __name__ == "__main__":
     unittest.main()

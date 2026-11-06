@@ -12,7 +12,14 @@ from pymongo.errors import PyMongoError
 from app.api.dependencies import get_current_user, get_database, require_admin
 from app.api.responses import bson_decimal, json_document
 from app.schemas.common import MongoId
-from app.schemas.order import OrderCreate, OrderRead, OrderStatus, OrderStatusUpdate
+from app.schemas.order import (
+    OrderCreate,
+    OrderNotification,
+    OrderRead,
+    OrderStatus,
+    OrderStatusUpdate,
+)
+from app.services.cart import release_expired_carts
 
 router = APIRouter(prefix="/orders", tags=["Pedidos"])
 
@@ -32,6 +39,7 @@ async def create_order(
     user: Annotated[dict[str, Any], Depends(get_current_user)],
 ) -> dict[str, Any]:
     """Valida productos y descuenta existencias solo al confirmar el pedido."""
+    await release_expired_carts(database)
     quantities: dict[str, int] = {}
     for item in payload.items:
         # Consolida líneas repetidas para validar y descontar el total solicitado.
@@ -93,7 +101,7 @@ async def create_order(
         return order
 
     try:
-        async with await database.client.start_session() as session:
+        async with database.client.start_session() as session:
             order = await session.with_transaction(transaction)
     except HTTPException:
         raise
@@ -108,9 +116,13 @@ async def list_orders(
     user: Annotated[dict[str, Any], Depends(get_current_user)],
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    mine: bool = Query(default=False),
+    order_status: OrderStatus | None = None,
 ) -> list[dict[str, Any]]:
     """Devuelve los pedidos propios o todos los pedidos al rol administrativo."""
-    criteria = {} if user.get("role") == "admin" else {"customer_id": user["_id"]}
+    criteria = {} if user.get("role") == "admin" and not mine else {"customer_id": user["_id"]}
+    if order_status is not None:
+        criteria["status"] = order_status.value
     cursor = database.orders.find(criteria).sort("created_at", -1).skip(offset).limit(limit)
     return [json_document(order) async for order in cursor]
 
@@ -127,7 +139,13 @@ async def get_order(
     )
     if order is None:
         raise HTTPException(status_code=404, detail="Pedido no encontrado.")
-    return json_document(order)
+    response = json_document(order)
+    if user.get("role") == "admin":
+        customer = await database.users.find_one({"_id": order["customer_id"]})
+        if customer is not None:
+            # Lista explícita: nunca serializar el documento de cuenta completo.
+            response["customer"] = {"full_name": customer["full_name"], "email": customer["email"]}
+    return response
 
 
 @router.patch("/{order_id}/status", response_model=OrderRead)
@@ -137,16 +155,17 @@ async def update_order_status(
     database: Annotated[AsyncDatabase[dict[str, Any]], Depends(get_database)],
     _: Annotated[dict[str, Any], Depends(require_admin)],
 ) -> dict[str, Any]:
-    """Aplica estados secuenciales y devuelve stock al cancelar antes del envío."""
+    """Aplica estados secuenciales y repone stock al rechazar o registrar devolución."""
     transitions = {
         OrderStatus.CONFIRMED: {OrderStatus.PREPARING, OrderStatus.CANCELLED},
         OrderStatus.PREPARING: {OrderStatus.SHIPPED, OrderStatus.CANCELLED},
         OrderStatus.SHIPPED: {OrderStatus.DELIVERED},
-        OrderStatus.DELIVERED: set(),
+        OrderStatus.DELIVERED: {OrderStatus.RETURNED},
+        OrderStatus.RETURNED: set(),
         OrderStatus.CANCELLED: set(),
     }
     try:
-        async with await database.client.start_session() as session:
+        async with database.client.start_session() as session:
 
             async def transaction(active_session: Any) -> dict[str, Any]:
                 order = await database.orders.find_one(
@@ -155,18 +174,39 @@ async def update_order_status(
                 if order is None:
                     raise HTTPException(status_code=404, detail="Pedido no encontrado.")
                 current = OrderStatus(order["status"])
+                if payload.expected_status is not None and payload.expected_status != current:
+                    raise HTTPException(
+                        status_code=409, detail="El pedido cambió; actualiza su estado."
+                    )
                 if payload.status not in transitions[current]:
                     raise HTTPException(
                         status_code=409,
                         detail=f"No se permite pasar de {current.value} a {payload.status.value}.",
                     )
-                if payload.status == OrderStatus.CANCELLED:
+                if payload.status in (OrderStatus.CANCELLED, OrderStatus.RETURNED):
                     for item in order["items"]:
-                        await database.products.update_one(
+                        restored = await database.products.update_one(
                             {"_id": item["product_id"]},
                             {"$inc": {"stock": item["quantity"]}},
                             session=active_session,
                         )
+                        if restored.matched_count != 1:
+                            raise HTTPException(
+                                status_code=409, detail="No se pudo reponer una pieza."
+                            )
+                labels = {
+                    OrderStatus.PREPARING: "Pedido aceptado y en preparación.",
+                    OrderStatus.SHIPPED: "Pedido enviado.",
+                    OrderStatus.DELIVERED: "Pedido entregado.",
+                    OrderStatus.CANCELLED: "Pedido rechazado. Se devolvieron las existencias.",
+                    OrderStatus.RETURNED: "Devolución registrada. Se repusieron las existencias.",
+                }
+                _append_update(
+                    order,
+                    labels[payload.status]
+                    + (" " + payload.message.strip() if payload.message.strip() else ""),
+                    status=payload.status,
+                )
                 order["status"] = payload.status
                 result = await database.orders.replace_one(
                     {"_id": order["_id"], "status": current.value},
@@ -188,4 +228,51 @@ async def update_order_status(
         raise HTTPException(
             status_code=503, detail="No fue posible actualizar el estado del pedido."
         ) from None
+    return json_document(updated)
+
+
+def _append_update(order, message, *, status=None, identifier=None):
+    """Acota el historial para evitar documentos sin límite de tamaño."""
+    updates = order.setdefault("updates", [])
+    # Reserva espacio para estados finales: las novedades no bloquean una devolución.
+    if status is None and len(updates) >= 190:
+        raise HTTPException(status_code=409, detail="El historial del pedido alcanzó su límite.")
+    updates.append(
+        {
+            "id": identifier or str(ObjectId()),
+            "message": message,
+            "created_at": datetime.now(UTC),
+            "status": status,
+        }
+    )
+
+
+@router.post("/{order_id}/notifications", response_model=OrderRead)
+async def notify_order(
+    order_id: MongoId,
+    payload: OrderNotification,
+    database: Annotated[AsyncDatabase[dict[str, Any]], Depends(get_database)],
+    _: Annotated[dict[str, Any], Depends(require_admin)],
+) -> dict[str, Any]:
+    """Publica una novedad interna; no envía correos ni modifica existencias."""
+
+    async def transaction(session):
+        order = await database.orders.find_one({"_id": ObjectId(order_id)}, session=session)
+        if order is None:
+            raise HTTPException(status_code=404, detail="Pedido no encontrado.")
+        if any(item["id"] == payload.request_id for item in order.get("updates", [])):
+            return order
+        _append_update(order, payload.message, identifier=payload.request_id)
+        result = await database.orders.replace_one({"_id": order["_id"]}, order, session=session)
+        if result.matched_count != 1:
+            raise HTTPException(status_code=409, detail="El pedido cambió; vuelve a consultar.")
+        return order
+
+    try:
+        async with database.client.start_session() as session:
+            updated = await session.with_transaction(transaction)
+    except HTTPException:
+        raise
+    except PyMongoError:
+        raise HTTPException(status_code=503, detail="No fue posible guardar la novedad.") from None
     return json_document(updated)

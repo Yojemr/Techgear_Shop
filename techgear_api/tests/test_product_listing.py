@@ -2,7 +2,7 @@
 
 import unittest
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from app.api.dependencies import get_database, require_admin
 from app.main import app
@@ -32,6 +32,10 @@ class Cursor:
 
 
 class ProductListingTests(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        patch("app.api.products.release_expired_carts", new=AsyncMock()).start()
+        self.addCleanup(patch.stopall)
+
     async def test_public_query_excludes_inactive_while_admin_query_includes_them(self):
         document = {
             "_id": ObjectId(),

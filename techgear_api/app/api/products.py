@@ -10,7 +10,8 @@ from pymongo.errors import DuplicateKeyError, PyMongoError
 from app.api.dependencies import get_database, require_admin
 from app.api.responses import bson_decimal, json_document
 from app.schemas.common import MongoId
-from app.schemas.product import ProductCreate, ProductRead
+from app.schemas.product import ProductCreate, ProductRead, ProductUpdate
+from app.services.cart import release_expired_carts
 
 router = APIRouter(prefix="/products", tags=["Productos"])
 
@@ -29,6 +30,7 @@ async def list_products(
 
 async def _product_rows(database, criteria, category, search, limit, offset):
     """Comparte búsqueda y paginación sin mezclar el acceso público y administrativo."""
+    await release_expired_carts(database)
     if category:
         criteria["category"] = category
     if search:
@@ -69,6 +71,7 @@ async def managed_product(
     _: Annotated[dict[str, Any], Depends(require_admin)],
 ) -> dict[str, Any]:
     """Permite editar también un producto retirado sin exponerlo en la tienda."""
+    await release_expired_carts(database)
     try:
         product = await database.products.find_one({"_id": ObjectId(product_id)})
     except PyMongoError:
@@ -85,6 +88,7 @@ async def get_product(
     product_id: MongoId, database: Annotated[AsyncDatabase[dict[str, Any]], Depends(get_database)]
 ) -> dict[str, Any]:
     """Recupera un producto activo por su identificador MongoDB."""
+    await release_expired_carts(database)
     product = await database.products.find_one({"_id": ObjectId(product_id), "active": True})
     if product is None:
         raise HTTPException(status_code=404, detail="Producto no encontrado.")
@@ -114,18 +118,29 @@ async def create_product(
 @router.put("/{product_id}", response_model=ProductRead)
 async def replace_product(
     product_id: MongoId,
-    payload: ProductCreate,
+    payload: ProductUpdate,
     database: Annotated[AsyncDatabase[dict[str, Any]], Depends(get_database)],
     _: Annotated[dict[str, Any], Depends(require_admin)],
 ) -> dict[str, Any]:
-    """Reemplaza los datos editables del producto sin cambiar su identidad."""
-    document = payload.model_dump(mode="python")
+    """Actualiza solo si el inventario no cambió desde que se abrió el formulario."""
+    await release_expired_carts(database)
+    document = payload.model_dump(mode="python", exclude={"expected_stock"})
     document["image_url"] = str(payload.image_url)
     document["price"] = bson_decimal(payload.price)
     try:
         result = await database.products.find_one_and_update(
-            {"_id": ObjectId(product_id)}, {"$set": document}, return_document=True
+            {"_id": ObjectId(product_id), "stock": payload.expected_stock},
+            {"$set": document},
+            return_document=True,
         )
+        if result is None:
+            existing = await database.products.find_one({"_id": ObjectId(product_id)})
+            if existing is not None:
+                # La comparación y la escritura son una única operación de MongoDB.
+                raise HTTPException(
+                    status_code=412,
+                    detail="El inventario cambió. Abre de nuevo la edición antes de guardar.",
+                )
     except DuplicateKeyError:
         raise HTTPException(status_code=409, detail="Ya existe un producto con ese SKU.") from None
     except PyMongoError:
