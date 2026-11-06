@@ -1,0 +1,8 @@
+**/.venv/**
+**/node_modules/**
+**/staticfiles/**
+**/__pycache__/**
+.git/
+.env
+.env.*
+techgear_web/techgear_shop/templates/**/*.html

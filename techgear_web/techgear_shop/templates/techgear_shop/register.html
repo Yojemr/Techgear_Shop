@@ -1,18 +1,48 @@
-{% extends 'techgear_shop/base.html' %}
-{% load asset_tags %}
-{% block title %}Crear cuenta · Techgear{% endblock %}
-{% block content %}
-<div class="shell register-layout">
-  <section class="register-story"><span class="eyebrow">CONSTRUYE ALGO TUYO</span><h1>Tu próxima pieza.<br>Tu propia cuenta.</h1><p>Guarda tus componentes en el carrito, revisa el total y confirma tu pedido desde un solo lugar.</p><a class="back-link" href="{% url 'shop:catalog' %}">← Volver al catálogo</a></section>
-  <section class="registration-card" aria-labelledby="register-title">
-    <span class="eyebrow">EMPIEZA AQUÍ</span><h2 id="register-title">Crea tu cuenta<span class="brand-dot">.</span></h2>
-    <p class="auth-description">¿Ya tienes una? <a href="{% url 'shop:login' %}?next={{ next|urlencode }}">Inicia sesión</a></p>
-    <form method="post" class="login-form">
-      {% csrf_token %}<input type="hidden" name="next" value="{{ next }}">
-      {% if form.non_field_errors %}<div class="notice notice-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-      {% for field in form %}<div class="form-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<p class="field-help">{{ field.help_text }}</p>{% endif %}{% if field.errors %}<div class="field-error" role="alert">{{ field.errors }}</div>{% endif %}</div>{% endfor %}
-      <button class="button button-dark login-submit" type="submit">Crear cuenta <span aria-hidden="true">↗</span></button>
-    </form>
-  </section>
-</div>
+{% extends 'techgear_shop/base.html' %} {% load asset_tags %} {% block title %}Crear cuenta · Techgear{% endblock %} {% block content %}
+    <div class="shell register-layout">
+        <section class="register-story">
+            <span class="eyebrow">CONSTRUYE ALGO TUYO</span>
+            <h1>
+                Tu próxima pieza.
+                <br />
+                Tu propia cuenta.
+            </h1>
+            <p>
+                Guarda tus componentes en el carrito, revisa el total y confirma tu
+                pedido desde un solo lugar.
+            </p>
+            <a class="back-link" href="{% url 'shop:catalog' %}">← Volver al catálogo</a>
+        </section>
+        <section class="registration-card" aria-labelledby="register-title">
+            <span class="eyebrow">EMPIEZA AQUÍ</span>
+            <h2 id="register-title">
+                Crea tu cuenta<span class="brand-dot">.</span>
+            </h2>
+            <p class="auth-description">
+                ¿Ya tienes una?
+                <a href="{% url 'shop:login' %}?next={{ next|urlencode }}">Inicia sesión</a>
+            </p>
+            <form method="post" class="login-form">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next }}" />
+                {% if form.non_field_errors %}
+                    <div class="notice notice-error" role="alert">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                {% for field in form %}
+                    <div class="form-field">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}
+                            <p class="field-help">{{ field.help_text }}</p>
+                        {% endif %}
+                        {% if field.errors %}
+                            <div class="field-error" role="alert">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                <button class="button button-dark login-submit" type="submit">
+                    Crear cuenta <span aria-hidden="true">↗</span>
+                </button>
+            </form>
+        </section>
+    </div>
 {% endblock %}

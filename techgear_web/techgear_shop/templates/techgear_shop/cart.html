@@ -1,3 +1,14 @@
-{% extends 'techgear_shop/base.html' %}
-{% block title %}Tu carrito · Techgear{% endblock %}
-{% block content %}<div class="shell cart-page"><div class="section-heading"><div><p class="eyebrow">PIEZA A PIEZA</p><h1>Tu carrito.</h1></div><a class="back-link" href="{% url 'shop:catalog' %}">Seguir explorando ↗</a></div><div class="cart-page-content" data-cart-page>{% include 'techgear_shop/_cart_content.html' %}</div></div>{% endblock %}
+{% extends 'techgear_shop/base.html' %} {% block title %}Tu carrito · Techgear{% endblock %} {% block content %}
+    <div class="shell cart-page">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">PIEZA A PIEZA</p>
+                <h1>Tu carrito.</h1>
+            </div>
+            <a class="back-link" href="{% url 'shop:catalog' %}">Seguir explorando ↗</a>
+        </div>
+        <div class="cart-page-content" data-cart-page>
+            {% include 'techgear_shop/_cart_content.html' %}
+        </div>
+    </div>
+{% endblock %}

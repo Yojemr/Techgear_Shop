@@ -1,4 +1,4 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "django"
+    "$schema": "https://openapi.vercel.sh/vercel.json",
+    "framework": "django"
 }

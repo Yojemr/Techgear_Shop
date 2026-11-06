@@ -1,36 +1,184 @@
-# Techgear_Shop
+# Techgear Shop
 
-Taller 2 de APIs: tienda de hardware y accesorios tecnológicos con FastAPI, Django MVT y MongoDB Atlas.
+Tienda de componentes de computador desarrollada para el Taller 2 de APIs. Integra una API de negocio con FastAPI, una interfaz Django bajo el patrón MVT y persistencia en MongoDB Atlas.
 
-## Estructura
+**Autor:** [Juan Esteban Maya · Yojemr](https://github.com/Yojemr)
 
-- `techgear_api/app/main.py`: aplicación FastAPI, ciclo de vida de MongoDB y rutas documentadas en Swagger.
-- `techgear_api/app/api/`: autenticación, usuarios, productos, pedidos y conversión de respuestas.
-- `techgear_api/app/core/`: configuración validada, hash de contraseñas y tokens.
-- `techgear_api/app/db/`: conexión a MongoDB y creación explícita de colecciones e índices.
-- `techgear_api/app/schemas/`: contratos Pydantic para datos recibidos y respuestas.
-- `techgear_api/tests/`: pruebas con información ficticia y conexiones simuladas.
-- `techgear_web/config/`: configuración de Django y sesiones en MongoDB.
-- `techgear_web/techgear_shop/`: vistas, formularios, plantillas y recursos del catálogo.
-- `techgear_web/techgear_shop/services/`: consumo HTTP de la API.
-- `techgear_api/data/pc_components.json`: 16 componentes verificados con sus fuentes.
-- `pyproject.toml`: reglas de formato y análisis estático con Ruff.
+**Entrega:** versión `1.0.0`, publicada como release `v1.0`.
 
-## Alcance funcional
+## Enlaces del proyecto
 
-- Cuentas de clientes guardadas en MongoDB. Registro público asigna rol de cliente; un administrador puede registrar clientes.
-- Contraseñas almacenadas como hash Argon2. El inicio de sesión emite tokens Bearer de duración limitada.
-- CRUD administrativo de productos. Las consultas públicas muestran solo productos activos; el borrado es lógico para conservar pedidos históricos.
-- Creación de pedidos autenticados: el servidor determina cliente y precios, conserva copia del SKU, nombre y precio, calcula subtotales con `Decimal` y descuenta stock.
-- El carrito reserva existencias reales al añadir productos; las otras cuentas solo pueden reservar las unidades restantes. Actualizar, retirar y vaciar modifica stock y carrito en una transacción. Confirmar convierte la reserva en pedido sin volver a descontar inventario.
-- Los administradores pueden avanzar estados secuenciales. Cancelar un pedido confirmado o en preparación devuelve las existencias; después de enviado no se puede cancelar.
-- No se integran pagos, transportadoras ni otros terceros.
+| Recurso          | Enlace                                                                                                                                                         | Para qué sirve                                                             |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Tienda web       | [Abrir Techgear Shop](https://techgear-shop-ten.vercel.app/)                                                                                                   | Consultar componentes, registrarse, preparar el carrito y revisar pedidos. |
+| Registro         | [Crear cuenta](https://techgear-shop-ten.vercel.app/registro/)                                                                                                 | Registrar una cuenta de cliente.                                           |
+| Inicio de sesión | [Ingresar](https://techgear-shop-ten.vercel.app/ingresar/)                                                                                                     | Acceder como cliente o administrador.                                      |
+| API              | [Servicio en Render](https://techgear-shop-api.onrender.com/)                                                                                                  | Comprobar que el servicio responde.                                        |
+| Swagger UI       | [Documentación interactiva](https://techgear-shop-api.onrender.com/docs)                                                                                       | Consultar contratos y probar operaciones de la API.                        |
+| OpenAPI          | [Esquema JSON](https://techgear-shop-api.onrender.com/openapi.json)                                                                                            | Inspeccionar rutas, parámetros y esquemas de entrada y salida.             |
+| Repositorio      | [Yojemr/Techgear_Shop](https://github.com/Yojemr/Techgear_Shop)                                                                                                | Consultar código e historial de `main`.                                    |
+| Calidad          | [GitHub Actions](https://github.com/Yojemr/Techgear_Shop/actions/workflows/quality.yml)                                                                        | Consultar los resultados de pruebas y validaciones de cada publicación.    |
+| Entrega final    | [Release v1.0](https://github.com/Yojemr/Techgear_Shop/releases/tag/v1.0)                                                                                      | Descargar el código de la entrega y leer sus notas.                        |
+| Catálogo         | [Fuentes de precios y especificaciones](docs/catalog_sources.md)                                                                                               | Revisar las referencias utilizadas para los productos de demostración.     |
+| Guía académica   | [Instrucciones del Taller 2](https://proud-pin-7d7.notion.site/Taller2-Python-TechGear-Sistema-H-brido-de-Cat-logo-y-Pedidos-3b977e4d98fb80c580a6ce899221c318) | Consultar el alcance, el plan de desarrollo y los requisitos de entrega.   |
 
-El catálogo inicial se centra en componentes de computador: procesadores, tarjetas gráficas, placas madre, RAM, SSD, fuentes, gabinetes y refrigeración. Los precios de referencia en COP se consultaron el 29/10/2026 y el 30/10/2026; las fichas se contrastaron con los fabricantes. El inventario inicial de demostración es de 5 unidades por producto. La carga es explícita y no sobrescribe registros existentes. Las [fuentes del catálogo](docs/catalog_sources.md) documentan las referencias.
+### Activar la API en Render
 
-## Requisitos e instalación
+Si la tienda indica que la API no está disponible porque el servicio gratuito se suspendió por inactividad:
 
-Se requiere Python 3.14 y acceso a MongoDB Atlas. Desde la raíz del repositorio, crea los entornos independientes:
+1. Abre [Activar la API en Render](https://techgear-shop-api.onrender.com/).
+2. Espera a que termine de despertar. La respuesta correcta muestra `"status": "ok"`; la primera solicitud puede tardar.
+3. Si aún no responde, espera y vuelve a abrir el enlace. Después regresa a [la tienda](https://techgear-shop-ten.vercel.app/) y recarga la página.
+4. Puedes abrir [Swagger](https://techgear-shop-api.onrender.com/docs) para comprobar que la API ya está disponible.
+
+Este enlace despierta un servicio suspendido; si el despliegue falló o el error persiste, revisa los registros del servicio en [el panel de Render](https://dashboard.render.com/).
+
+## Contenido
+
+- [Funcionalidades](#funcionalidades)
+- [Arquitectura y patrón MVT](#arquitectura-y-patrón-mvt)
+- [Tecnologías y librerías](#tecnologías-y-librerías)
+- [Estructura del proyecto](#estructura-del-proyecto)
+- [Instalación local](#instalación-local)
+- [Cómo usar la tienda](#cómo-usar-la-tienda)
+- [Inventario y estados del pedido](#inventario-y-estados-del-pedido)
+- [API y Swagger](#api-y-swagger)
+- [Errores y recuperación](#errores-y-recuperación)
+- [Pruebas y calidad](#pruebas-y-calidad)
+- [Despliegue](#despliegue)
+- [Versionado y entrega](#versionado-y-entrega)
+- [Referencias](#referencias)
+
+## Funcionalidades
+
+| Perfil        | Operaciones disponibles                                                                                                                                                                                   |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Visitante     | Explorar, buscar, filtrar y ordenar el catálogo; consultar fichas técnicas y sugerencias; guardar una selección en el carrito sin reservar inventario.                                                    |
+| Cliente       | Registrarse, iniciar y cerrar sesión; reservar productos, cambiar cantidades, vaciar el carrito, confirmar pedidos y consultar su estado y novedades.                                                     |
+| Administrador | Crear, consultar, editar, desactivar y reactivar productos; revisar pedidos de otros usuarios, prepararlos, registrar envío y entrega, rechazarlos, registrar devoluciones y publicar novedades internas. |
+
+El catálogo inicial incluye 16 referencias: procesadores, tarjetas gráficas, placas madre, memorias RAM, SSD, fuentes de alimentación, gabinetes y refrigeración. Cada producto nuevo se carga con 5 unidades de demostración. Repetir la carga conserva los productos y existencias que ya estaban registrados.
+
+Los precios en COP son referencias consultadas el 29 y el 30 de octubre de 2026; no se actualizan automáticamente. Las especificaciones y fuentes están en [docs/catalog_sources.md](docs/catalog_sources.md).
+
+Confirmar un pedido registra la compra solicitada sin realizar cobros. El proyecto no integra pasarelas de pago, reembolsos, transportadoras, correo ni WhatsApp. Las notificaciones aparecen dentro de **Mis pedidos**.
+
+## Arquitectura y patrón MVT
+
+```text
+Navegador
+    │ HTML, formularios y cookie de sesión
+    ▼
+Django: interfaz MVT en Vercel
+    │ HTTP + JWT guardado en la sesión del servidor
+    ▼
+FastAPI: reglas de negocio en Render
+    │ PyMongo + transacciones
+    ▼
+MongoDB Atlas: users, products, carts y orders
+
+Django también utiliza MongoDB Atlas para django_session.
+```
+
+FastAPI es responsable de identidad, roles, productos, precios, existencias, reservas y pedidos. Django consume sus endpoints mediante HTTP; no modifica directamente las colecciones de negocio ni duplica las cuentas comerciales con `auth.User`.
+
+| Parte de MVT | Implementación en Django                                                                                                                                                                                                                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Models       | [models.py](techgear_web/techgear_shop/models.py) contiene modelos de presentación para carrito y pedidos. Los documentos y contratos de negocio pertenecen a FastAPI.                                                                                                    |
+| Views        | [views.py](techgear_web/techgear_shop/views.py), [cart.py](techgear_web/techgear_shop/cart.py), [dashboard.py](techgear_web/techgear_shop/dashboard.py) y [order_dashboard.py](techgear_web/techgear_shop/order_dashboard.py) atienden las páginas y validan formularios. |
+| Templates    | [templates/techgear_shop](techgear_web/techgear_shop/templates/techgear_shop) contiene las páginas y fragmentos HTML renderizados en el servidor.                                                                                                                         |
+| Consumo HTTP | [services/api.py](techgear_web/techgear_shop/services/api.py) centraliza las solicitudes a FastAPI, los tiempos de espera y los errores públicos.                                                                                                                         |
+
+La autenticación utiliza contraseñas con hash Argon2 y JWT de duración limitada. El navegador recibe una cookie de sesión HttpOnly; el JWT se conserva en el servidor. Los formularios Django cuentan con protección CSRF y ambas aplicaciones comprueban los permisos administrativos.
+
+## Tecnologías y librerías
+
+Las versiones exactas se mantienen en [requirements de la API](techgear_api/requirements.txt), [requirements de la web](techgear_web/requirements.txt) y [requirements de desarrollo](requirements-dev.txt) para reproducir las instalaciones.
+
+| Tecnología o librería           | Versión del proyecto       | Uso                                                         |
+| ------------------------------- | -------------------------- | ----------------------------------------------------------- |
+| Python                          | 3.14; API fijada en 3.14.7 | Lenguaje de ambas aplicaciones.                             |
+| FastAPI                         | 0.161.1                    | API REST y documentación Swagger/OpenAPI.                   |
+| Pydantic / Pydantic Settings    | 2.14.1 / 2.16.1            | Validación de contratos y configuración del entorno.        |
+| Uvicorn                         | 0.54.0                     | Servidor ASGI de FastAPI.                                   |
+| PyMongo                         | 4.19.0                     | Conexión asíncrona con Atlas y operaciones transaccionales. |
+| PyJWT                           | 2.15.1                     | Firma y validación de tokens de acceso.                     |
+| pwdlib con Argon2               | 0.3.1                      | Hash y verificación de contraseñas.                         |
+| python-dotenv                   | 1.2.4                      | Lectura de configuración privada local.                     |
+| Django                          | 6.1.2                      | Interfaz MVT, formularios, sesiones y plantillas.           |
+| django-mongodb-backend          | 6.1.0                      | Persistencia de componentes internos de Django en MongoDB.  |
+| HTTPX                           | 0.28.1                     | Comunicación HTTP desde Django y pruebas de la API.         |
+| Ruff                            | 0.17.2                     | Formato y análisis estático del código.                     |
+| HTML, CSS y JavaScript          | Recursos propios           | Catálogo, carrusel, modal de edición y carrito lateral.     |
+| MongoDB Atlas / Render / Vercel | Servicios externos         | Base de datos, despliegue de la API y despliegue de la web. |
+
+Las pruebas utilizan `unittest` y las herramientas de prueba de Django, sin depender de cuentas o datos reales de Atlas.
+
+## Estructura del proyecto
+
+```text
+Techgear_Shop/
+├── .github/workflows/quality.yml       # Comprobaciones de calidad en GitHub
+├── docs/catalog_sources.md            # Fuentes del catálogo
+├── scripts/                          # Inicio y cierre de servidores locales
+├── techgear_api/
+│   ├── app/
+│   │   ├── api/                      # Autenticación, usuarios, productos, carrito y pedidos
+│   │   ├── core/                     # Configuración y seguridad
+│   │   ├── db/                       # Conexión, índices y carga del catálogo
+│   │   ├── schemas/                  # Contratos Pydantic
+│   │   ├── services/cart.py          # Reservas e inventario transaccional
+│   │   ├── cli.py                    # Comandos administrativos explícitos
+│   │   └── main.py                   # Aplicación FastAPI
+│   ├── data/pc_components.json        # Productos iniciales con fuentes
+│   ├── tests/                        # Pruebas aisladas de la API
+│   ├── .env.example
+│   └── requirements.txt
+├── techgear_web/
+│   ├── config/                       # Configuración y entradas WSGI/ASGI
+│   ├── mongo_migrations/             # Migraciones de componentes internos de Django
+│   ├── techgear_shop/
+│   │   ├── services/api.py           # Cliente HTTP de FastAPI
+│   │   ├── static/techgear_shop/     # CSS, JavaScript, iconos e ilustraciones
+│   │   ├── templates/techgear_shop/  # Plantillas públicas y administrativas
+│   │   ├── models.py                # Modelos de presentación
+│   │   ├── forms.py                 # Validación de formularios
+│   │   ├── middleware.py            # Comprobación de identidad y sesión
+│   │   ├── views.py                 # Catálogo, registro y autenticación
+│   │   ├── cart.py                  # Carrito y consulta de pedidos propios
+│   │   ├── dashboard.py             # CRUD administrativo de productos
+│   │   ├── order_dashboard.py       # Gestión administrativa de pedidos
+│   │   └── urls.py                  # Rutas de la tienda
+│   ├── .env.example
+│   ├── manage.py
+│   ├── requirements.txt
+│   └── vercel.json
+├── iniciar_local.cmd
+├── cerrar_local.cmd
+├── pyproject.toml
+├── requirements-dev.txt
+└── README.md
+```
+
+Los archivos `.env`, entornos virtuales, credenciales, cachés y resultados generados se excluyen de Git.
+
+## Instalación local
+
+Los siguientes pasos usan PowerShell en Windows. Ejecuta los comandos desde la raíz del repositorio, salvo cuando se indique otra ubicación.
+
+### 1. Obtener el proyecto
+
+Se necesita Git, Python 3.14 y una base MongoDB Atlas con acceso de red y permisos para el proyecto.
+
+```powershell
+git clone https://github.com/Yojemr/Techgear_Shop.git
+cd Techgear_Shop
+python --version
+```
+
+Si ya tienes el repositorio, abre su carpeta en Visual Studio Code y utiliza su terminal integrada.
+
+### 2. Preparar los entornos independientes
 
 ```powershell
 python -m venv techgear_api/.venv
@@ -39,251 +187,306 @@ python -m venv techgear_web/.venv
 & ./techgear_web/.venv/Scripts/python.exe -m pip install -r techgear_web/requirements.txt
 ```
 
-Si no existen, copia los archivos de ejemplo sin reemplazar configuraciones locales:
+Los comandos invocan cada intérprete directamente; no es necesario activar un entorno ni cambiar la política de ejecución de PowerShell. La interfaz no requiere Node.js para ejecutarse.
+
+### 3. Configurar las variables privadas
+
+Copia los ejemplos solo si todavía no existen los archivos locales:
 
 ```powershell
 if (-not (Test-Path ./techgear_api/.env)) { Copy-Item ./techgear_api/.env.example ./techgear_api/.env }
 if (-not (Test-Path ./techgear_web/.env)) { Copy-Item ./techgear_web/.env.example ./techgear_web/.env }
 ```
 
-Completa `techgear_api/.env` con la URI privada del clúster, la base `techgear_shop` y una clave aleatoria `JWT_SECRET_KEY` de al menos 32 bytes. En `techgear_web/.env`, configura la clave de Django y la URL de API. Los archivos `.env` están excluidos de Git.
+| Variable                      | Aplicación | Configuración                                                        |
+| ----------------------------- | ---------- | -------------------------------------------------------------------- |
+| `MONGO_URI`                   | API y web  | URI privada de Atlas. Usar el mismo clúster para ambas aplicaciones. |
+| `MONGO_DB_NAME`               | API y web  | `techgear_shop`, separada de otras bases del clúster.                |
+| `JWT_SECRET_KEY`              | API        | Clave privada aleatoria de al menos 32 bytes.                        |
+| `JWT_ACCESS_TOKEN_MINUTES`    | API        | Duración de acceso; valor predeterminado: `30`.                      |
+| `DJANGO_SECRET_KEY`           | Web        | Clave privada aleatoria y estable.                                   |
+| `DJANGO_DEBUG`                | Web        | `True` durante el desarrollo local; `False` al desplegar.            |
+| `DJANGO_ALLOWED_HOSTS`        | Web        | Localmente: `127.0.0.1,localhost`.                                   |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | Web        | Orígenes HTTPS adicionales cuando se usa un dominio propio.          |
+| `TECHGEAR_API_URL`            | Web        | Localmente: `http://127.0.0.1:8001`.                                 |
 
-| Variable | Aplicación | Uso |
-| --- | --- | --- |
-| `MONGO_URI` | API y Web | URI privada de MongoDB Atlas. |
-| `MONGO_DB_NAME` | API | Base del proyecto: `techgear_shop`. |
-| `JWT_SECRET_KEY` | API | Clave de firma privada de los tokens, mínimo 32 bytes. |
-| `JWT_ACCESS_TOKEN_MINUTES` | API | Duración del token; por defecto 30 minutos. |
-| `DJANGO_SECRET_KEY` | Web | Clave privada de Django, generada localmente. |
-| `DJANGO_DEBUG` | Web | `True` para desarrollo local; `False` fuera de ese entorno. |
-| `DJANGO_ALLOWED_HOSTS` | Web | Hosts permitidos separados por comas. |
-| `TECHGEAR_API_URL` | Web | Dirección de API; localmente `http://127.0.0.1:8001`. |
+En Atlas, abre **Connect → Drivers**, copia la URI y completa usuario y contraseña con las credenciales de acceso a la base. Conserva la URI únicamente en los archivos privados o variables del servicio. Configura permisos y acceso de red para la base del proyecto.
 
-Para generar una clave local de JWT sin imprimirla en el código fuente, puedes usar:
+Puedes generar cada clave privada con este comando; ejecútalo por separado para JWT y Django y guarda los resultados en sus respectivos archivos `.env`:
 
 ```powershell
 & ./techgear_api/.venv/Scripts/python.exe -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-Guarda el resultado solo en `.env` o en el gestor de variables de Render.
+### 4. Preparar las colecciones y las sesiones
 
-
-## Catálogo inicial y sesiones web
-
-Desde la raíz del repositorio, prepara las sesiones de Django una vez. La persistencia sigue en MongoDB; este comando no crea cuentas comerciales:
+La preparación es explícita e idempotente. No se ejecuta automáticamente al iniciar los servicios:
 
 ```powershell
+$env:PYTHONPATH = (Resolve-Path ./techgear_api).Path
+& ./techgear_api/.venv/Scripts/python.exe -m app.db.mongodb --initialize
+Remove-Item Env:PYTHONPATH
 & ./techgear_web/.venv/Scripts/python.exe techgear_web/manage.py migrate sessions
 ```
 
-Carga las 16 referencias investigadas con el inventario inicial acordado:
+La API prepara `users`, `products`, `carts` y `orders`, junto con sus índices. Django prepara `django_session` en MongoDB. Estas migraciones son para componentes internos; no trasladan ni recrean las cuentas comerciales.
+
+### 5. Cargar el catálogo y crear un administrador
+
+Estos comandos escriben en la base configurada. Ejecútalos solo cuando corresponda preparar esa base:
 
 ```powershell
 $env:PYTHONPATH = (Resolve-Path ./techgear_api).Path
 & ./techgear_api/.venv/Scripts/python.exe -m app.cli seed-catalog --stock 5
+& ./techgear_api/.venv/Scripts/python.exe -m app.cli create-admin
 Remove-Item Env:PYTHONPATH
 ```
 
-El comando valida todos los productos antes de escribir y utiliza SKU únicos. Repetirlo conserva precios, datos e inventario de los productos que ya existen. No se ejecuta al arrancar los servidores.
+La carga incorpora únicamente SKU que todavía no existen. El alta administrativa solicita nombre, correo y contraseña de forma interactiva; la contraseña no se muestra en pantalla. **No existe una cuenta administrativa predeterminada.**
 
-Con ambos servidores encendidos, abre el [catálogo local](http://127.0.0.1:8000/) o el [login](http://127.0.0.1:8000/ingresar/). La URL configurada en TECHGEAR_API_URL debe apuntar a la API que vas a utilizar. Mantén DJANGO_DEBUG=True solo en desarrollo local; al desactivarlo, las cookies requieren HTTPS.
-
-El login recibe correo y contraseña, consulta FastAPI y guarda el JWT en la sesión del servidor. El navegador recibe una cookie HttpOnly, no el JWT. Cada petición autenticada verifica el perfil vigente en la API; las sesiones vencidas o rechazadas se eliminan. El cierre de sesión utiliza POST y protección CSRF. No se duplican clientes mediante los usuarios nativos de Django.
-
-La interfaz permite consultar, buscar, ordenar y filtrar componentes, ver especificaciones y sugerencias, registrarse, iniciar o cerrar sesión y preparar pedidos. Las fichas públicas usan URLs con nombre y referencia. El carrito lateral permite acumular productos, cambiar cantidades, revisar subtotales y confirmar el pedido sin pagos. `/registro/`, `/ingresar/`, `/carrito/` y `/pedidos/` completan el recorrido de la cuenta.
-
-## Administración de productos
-
-Inicia sesión con una cuenta de la API que tenga rol de administrador. El menú principal mostrará **Administración**, que abre [el dashboard local](http://127.0.0.1:8000/gestion/productos/). Esta sección usa las cuentas comerciales de FastAPI; la ruta nativa /admin/ de Django es independiente.
-
-La tabla permite buscar por nombre, marca o SKU, filtrar por categoría y estado, crear productos, editar sus datos y confirmar una desactivación. Los productos inactivos siguen disponibles para edición y pueden reactivarse marcando **Visible en el catálogo**. Cada especificación técnica se escribe en una línea con el formato `Clave: Valor`. Los precios se envían como decimales y las existencias como enteros no negativos.
-
-La edición desde la tabla abre un modal con la ficha completa, el precio, las existencias y la visibilidad. El modal conserva las validaciones, mantiene el foco dentro de la ventana y actualiza la misma tabla después de guardar. Sin JavaScript, el enlace conserva el formulario de edición tradicional.
-
-La portada presenta tres banners con navegación manual, rotación cada siete segundos y pausa. La rotación se detiene al enfocar controles, al ocultar la pestaña o cuando el carrusel deja de estar visible; la preferencia de movimiento reducido lo inicia en pausa. Las ilustraciones SVG se sirven localmente.
-
-Los formularios usan POST y protección CSRF en Django. El servidor envía GET, POST, PUT o DELETE a FastAPI con el JWT guardado en sesión. Las dos aplicaciones comprueban el rol; ocultar un enlace no sustituye el control de acceso. Desactivar no elimina documentos ni referencias históricas, y solo sucede tras confirmar el formulario.
-
-Las lecturas administrativas de FastAPI son `GET /products/manage/` y `GET /products/manage/{id}`; incluyen inactivos y exigen rol admin. Las consultas públicas conservan únicamente productos activos.
-
-## Preparación de MongoDB y primer administrador
-
-Desde `techgear_api`, prepara las colecciones e índices necesarios. El comando es explícito e idempotente; no inserta productos ni cuentas:
-
-```powershell
-& ./.venv/Scripts/python.exe -m app.db.mongodb --initialize
-```
-
-Crea manualmente el primer administrador con solicitud interactiva y contraseña oculta:
-
-```powershell
-& ./.venv/Scripts/python.exe -m app.cli create-admin
-```
-
-Este comando crea una cuenta en la base configurada. No se ejecuta automáticamente al arrancar la aplicación.
-
-### Inicio conjunto en Windows
-
-Desde la terminal de VS Code, ubicada en la raíz del repositorio, ejecuta:
+### 6. Iniciar y detener la tienda
 
 ```powershell
 .\iniciar_local.cmd
 ```
 
-También puedes hacer doble clic en iniciar_local.cmd. El lanzador usa los entornos virtuales existentes, inicia FastAPI en 127.0.0.1:8001 y Django en 127.0.0.1:8000, y abre el catálogo cuando ambos responden. Mantén la consola abierta; Ctrl+C detiene los dos servicios y sus recargadores. Los cambios de código se recargan automáticamente.
+El lanzador utiliza los entornos existentes, inicia API y web, y abre el catálogo cuando ambos responden. Usa la API local y `DJANGO_DEBUG=True` para esa ejecución sin modificar los archivos `.env`.
 
-Puedes usar `.\iniciar_local.cmd --check` para comprobar los requisitos sin iniciar servidores, o `.\iniciar_local.cmd --no-browser` para iniciarlos sin abrir el navegador. Si los puertos ya están ocupados, el lanzador informa el problema y no detiene esos procesos.
+| Servicio local | Enlace                                                   |
+| -------------- | -------------------------------------------------------- |
+| Tienda         | [http://127.0.0.1:8000/](http://127.0.0.1:8000/)         |
+| API            | [http://127.0.0.1:8001/](http://127.0.0.1:8001/)         |
+| Swagger UI     | [http://127.0.0.1:8001/docs](http://127.0.0.1:8001/docs) |
 
-Para detener la API, el front y sus recargadores desde otra terminal, ejecuta:
+Mantén la consola abierta. `Ctrl+C` detiene los servicios creados por el lanzador. Desde otra terminal puedes ejecutar:
 
 ```powershell
 .\cerrar_local.cmd
 ```
 
-También puedes hacer doble clic en cerrar_local.cmd. El comando identifica servidores de este repositorio, incluidos los iniciados manualmente con sus entornos virtuales; conserva terminales, navegadores y procesos de otros proyectos. `.\cerrar_local.cmd --check` solo comprueba si hay servidores, sin cerrarlos. El lanzador conjunto recibe primero una solicitud de cierre normal; si quedan procesos de servidores identificados, el comando los termina.
+El cierre identifica servidores de este repositorio y conserva los procesos de otros proyectos. Los lanzadores también pueden abrirse con doble clic.
 
-Las aplicaciones leen sus archivos .env locales. Para esta ejecución, el front usa la API local y DJANGO_DEBUG=True sin modificar los archivos de configuración. El lanzador no instala dependencias, ejecuta migraciones ni inserta datos.
+| Opción                             | Efecto                                                             |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `.\iniciar_local.cmd --check`      | Comprueba entornos, configuración y puertos sin iniciar servicios. |
+| `.\iniciar_local.cmd --no-browser` | Inicia ambos servicios sin abrir el navegador.                     |
+| `.\cerrar_local.cmd --check`       | Comprueba servidores locales sin cerrarlos.                        |
 
-## Ejecución local y Swagger
-
-Desde la raíz, inicia FastAPI:
+Para iniciar los servicios por separado, utiliza dos terminales en la raíz:
 
 ```powershell
+# Terminal 1: API
 & ./techgear_api/.venv/Scripts/python.exe -m uvicorn app.main:app --app-dir techgear_api --host 127.0.0.1 --port 8001 --reload
 ```
 
-La API está en <http://127.0.0.1:8001/> y la documentación interactiva en <http://127.0.0.1:8001/docs>. Para Django, en otra terminal:
-
 ```powershell
+# Terminal 2: web
 & ./techgear_web/.venv/Scripts/python.exe techgear_web/manage.py runserver 127.0.0.1:8000
 ```
 
-En Swagger, prueba primero `POST /auth/register` para crear un cliente, luego inicia sesión en `POST /auth/login` y copia `access_token` en **Authorize**. Las rutas marcadas con candado aceptan ese token. El administrador se crea con el comando anterior; desde su token puede registrar clientes y administrar productos y pedidos.
+## Cómo usar la tienda
 
-### Rutas principales
+### Recorrido del cliente
 
-| Método y ruta | Acceso | Operación |
-| --- | --- | --- |
-| `POST /auth/register` | Público | Registro de cliente. |
-| `POST /auth/login` | Público | Inicio de sesión y entrega de token. |
-| `GET /users/me` | Cliente o administrador | Perfil autenticado. |
-| `POST /users/` | Administrador | Registro administrativo de cliente. |
-| `GET /products/`, `GET /products/{id}` | Público | Catálogo y consulta de producto activo. |
-| `POST /products/`, `PUT /products/{id}`, `DELETE /products/{id}` | Administrador | Crear, editar y desactivar productos. |
-| `POST /orders/` | Cliente o administrador | Confirmar pedido y descontar inventario. |
-| `GET /orders/`, `GET /orders/{id}` | Autenticado | Ver pedidos propios; administradores ven todos. |
-| `PATCH /orders/{id}/status` | Administrador | Avanzar estado o cancelar antes del envío. |
+1. Explora el catálogo y abre la ficha de un componente para consultar sus especificaciones y sugerencias.
+2. Añade productos al carrito lateral. Sin sesión, la selección no reserva inventario.
+3. Crea una cuenta e inicia sesión. La API intenta reservar toda la selección; si faltan unidades, podrás ajustar las cantidades pendientes y pulsar **Reservar selección**.
+4. Revisa cantidades, subtotales y total. Los precios se validan nuevamente en el servidor.
+5. Pulsa **Confirmar pedido**. Se registra un pedido sin cobro y aparece su comprobante.
+6. Abre **Mis pedidos** desde el menú de la cuenta para consultar el estado y las novedades publicadas por la tienda.
+7. Al cerrar sesión, las unidades que todavía estén reservadas en el carrito regresan al inventario.
 
-Los estados permitidos avanzan así: `confirmed` → `preparing` → `shipped` → `delivered`. Desde `confirmed` y `preparing` también se permite `cancelled`; desde `shipped` solo se permite `delivered`.
+### Recorrido del administrador
 
-## Despliegue de la API en Render
+1. Ingresa con la cuenta administrativa creada mediante el comando de preparación.
+2. Abre **Administración → Productos e inventario** para crear componentes o buscar, filtrar, editar y desactivar los existentes.
+3. **Editar** abre un modal con datos técnicos, precio, existencias y visibilidad. Sin JavaScript, el enlace conserva el formulario tradicional.
+4. Abre **Pedidos de clientes**, filtra por estado y pulsa **Revisar pedido**.
+5. Revisa cliente, piezas, cantidades e importes. Usa las acciones disponibles para aceptar y preparar, registrar envío o entrega, rechazar antes del envío o registrar la devolución después de entregar.
+6. Escribe una novedad y pulsa **Notificar al cliente** para dejar un mensaje visible en el detalle de su pedido.
 
-El servicio se configura directamente en el panel de Render. Usa la raíz `techgear_api`, el comando de compilación `pip install -r requirements.txt`, el comando de inicio `uvicorn app.main:app --host 0.0.0.0 --port $PORT` y la ruta de comprobación `/`. Configura `MONGO_URI` y `JWT_SECRET_KEY` como variables privadas en Render; usa `MONGO_DB_NAME=techgear_shop`, `JWT_ACCESS_TOKEN_MINUTES=30` y Python `3.14.7`. No guardes los valores secretos en este repositorio.
+Las acciones administrativas exigen rol de administrador tanto en Django como en FastAPI. Desactivar un producto no borra sus referencias históricas. El registro administrativo de nuevos clientes también está disponible en `POST /users/` de la API.
 
-Antes de probarlo, confirma que el usuario de base de datos de Atlas tenga permisos sobre `techgear_shop` y que la lista de acceso de red permita el tráfico del servicio. Mantén el acceso restringido a las direcciones o rangos requeridos; no abras Atlas a cualquier IP como atajo.
+## Inventario y estados del pedido
 
-El plan gratuito de Render puede suspender el servicio tras inactividad y tardar en despertar al recibir la siguiente solicitud. Es adecuado para demostración académica, no para una tienda en producción. La instancia gratuita de Render no permite ejecutar tareas de una sola vez desde su panel; prepara el índice y crea la cuenta administrativa desde tu computador con `.env` local apuntando a Atlas.
+`products.stock` representa las unidades disponibles para nuevas reservas, excluyendo las que están en carritos autenticados.
 
-## Carrito y reservas
+| Acción                                                       | Efecto sobre el inventario                                                                                     |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| Visitante añade o modifica su selección                      | No descuenta unidades.                                                                                         |
+| Cliente autenticado añade unidades                           | Reserva y descuenta la diferencia en una transacción de MongoDB.                                               |
+| Otro cliente intenta tomar esas unidades                     | Solo puede reservar el stock restante.                                                                         |
+| Cliente reduce cantidad, retira productos o vacía el carrito | Devuelve las unidades liberadas.                                                                               |
+| Cliente confirma un carrito                                  | Convierte la reserva en pedido sin volver a descontar. Repetir la misma confirmación devuelve el mismo pedido. |
+| Administrador rechaza antes del envío                        | Cancela el pedido y repone sus unidades una sola vez.                                                          |
+| Administrador registra una devolución después de la entrega  | Devuelve el pedido completo y repone sus unidades una sola vez.                                                |
+| Administrador guarda una ficha con stock antiguo             | La API rechaza la escritura; debe abrir de nuevo la edición para consultar las existencias actuales.           |
 
-- Los visitantes pueden guardar productos y cantidades en la sesión de Django sin reservar ni descontar inventario. Al confirmar se les dirige a iniciar sesión.
-- Al ingresar, la API intenta reservar toda la selección en una transacción. Si falta stock, conserva la selección editable sin descuentos parciales; el usuario puede ajustarla y volver a reservar.
-- `products.stock` representa unidades disponibles, excluyendo las reservadas.
-- La edición administrativa envía `expected_stock` con las existencias que mostró el formulario. `PUT /products/{id}` responde 412 si una reserva, compra o devolución cambió ese valor; hay que volver a abrir la ficha antes de guardar. La comprobación y la actualización son atómicas, evitando sobrescribir reservas con un formulario antiguo.
-- `carts` contiene un documento por cuenta con cantidades, versión y vencimiento de la reserva. Precios e identidad se determinan en FastAPI.
-- Quitar productos, vaciar el carrito y cerrar sesión devuelve existencias. Un cierre de sesión fallido conserva la sesión para poder reintentar la devolución.
-- Las pestañas autenticadas envían presencia cada 30 segundos. Sin señal durante 120 segundos, la reserva vence; la siguiente consulta al catálogo, carrito o compra la libera transaccionalmente. Navegar entre páginas y mantener otra pestaña conectada conserva la reserva. Una desconexión prolongada o la suspensión del navegador también puede liberarla.
-- El vencimiento de la reserva no cierra la cuenta ni renueva la duración del JWT. Al volver a abrir la tienda se conserva la sesión mientras siga vigente, con carrito vacío si la reserva venció.
-- La confirmación compara versión y total, conserva los precios históricos y admite reintentos de la misma versión sin duplicar pedidos. No existe pago ni estado «pagado».
-- La limpieza es diferida y no necesita un proceso residente en Vercel. No debe crearse un índice TTL que borre reservas sin devolver stock.
-- La preparación explícita de la API (`python -m app.db.mongodb --initialize`) incluye `carts` y su índice de vencimiento. No se ejecuta automáticamente al arrancar o durante el build.
+Los cambios de carrito, pedido e inventario que deban realizarse juntos usan transacciones. Un fallo revierte los cambios parciales. Los importes se calculan con `Decimal` y se guardan con precisión decimal; cada pedido conserva el SKU, nombre y precio de sus productos al confirmar.
 
-| Ruta de la API | Operación |
-| --- | --- |
-| `GET /cart/` | Consultar carrito propio y totales. |
-| `POST /cart/items/{id}` | Añadir unidades y reservarlas. |
-| `PUT /cart/items/{id}` | Fijar cantidad; cero elimina la línea. |
-| `DELETE /cart/` | Vaciar y devolver reservas. |
-| `POST /cart/import` | Reservar la selección de visitante después de autenticar, sin duplicar reintentos. |
-| `POST /cart/heartbeat` | Renovar la reserva mientras la tienda siga abierta. |
-| `POST /cart/checkout` | Confirmar sin cobrar ni descontar dos veces. |
+Las pestañas autenticadas notifican presencia cada 30 segundos. Si pasan 120 segundos sin señal, la reserva vence y la siguiente consulta al catálogo, carrito o compra la libera transaccionalmente. Cerrar el navegador, una desconexión prolongada o su suspensión pueden liberar la reserva sin cerrar la cuenta. No se usa un índice TTL que borre reservas sin devolver stock.
 
-## Despliegue de la web en Vercel
+| Estado API  | Presentación          | Siguiente acción permitida     |
+| ----------- | --------------------- | ------------------------------ |
+| `confirmed` | Confirmado            | Aceptar y preparar o rechazar. |
+| `preparing` | En preparación        | Marcar enviado o rechazar.     |
+| `shipped`   | Enviado               | Marcar entregado.              |
+| `delivered` | Entregado             | Registrar devolución completa. |
+| `cancelled` | Rechazado / cancelado | Estado final.                  |
+| `returned`  | Devuelto              | Estado final.                  |
 
-La web se despliega como un proyecto Django independiente; la API conserva su servicio de Render. Al importar este repositorio en Vercel, configura:
+Cada cambio administrativo deja una novedad en el pedido. Las notificaciones internas pueden reintentarse con el mismo identificador sin duplicar el mensaje. Ningún estado representa un pago realizado.
 
-| Campo | Valor |
-| --- | --- |
-| Root Directory | `techgear_web` |
-| Framework Preset | `Django` |
-| Install Command | Automático; usa `requirements.txt`. |
-| Build Command | Automático; Django recopila los archivos estáticos. |
-| Output Directory | Predeterminado de Django, sin reemplazo manual. |
-| Python | `3.14`, definido en `.python-version`. |
+## API y Swagger
 
-El archivo `techgear_web/vercel.json` fija el framework Django. Vercel descubre `manage.py`, utiliza `config.wsgi.application` y publica los archivos de `STATIC_ROOT` en `/static/`. No se necesitan un servicio adicional en la raíz, una carpeta `api/` ni un rewrite global.
+Abre [Swagger publicado](https://techgear-shop-api.onrender.com/docs) o [Swagger local](http://127.0.0.1:8001/docs).
 
-Configura estas variables en el panel de Vercel para los entornos que vayas a desplegar. No escribas claves o URI privadas en `vercel.json`:
+1. Registra un cliente mediante `POST /auth/register` o utiliza una cuenta existente.
+2. Ejecuta `POST /auth/login` con correo y contraseña.
+3. Copia `access_token` y pégalo en **Authorize**. Se utilizará como token Bearer.
+4. Prueba las rutas correspondientes a tu rol. Los precios y la identidad del cliente los determina la API.
+5. Usa **Logout** en el cuadro de autorización para retirar el token del navegador de Swagger al terminar.
 
-| Variable | Valor |
-| --- | --- |
-| `DJANGO_SECRET_KEY` | Una clave privada aleatoria y estable entre despliegues. |
-| `DJANGO_DEBUG` | `False`. Vercel también fuerza su desactivación desde la configuración. |
-| `TECHGEAR_API_URL` | La URL pública HTTPS del servicio FastAPI en Render. |
-| `MONGO_URI` | La URI privada de Atlas utilizada por este proyecto. |
-| `MONGO_DB_NAME` | `techgear_shop`. |
-| `DJANGO_ALLOWED_HOSTS` | Dominios propios adicionales, separados por comas y sin `https://`, si se utilizan. |
-| `DJANGO_CSRF_TRUSTED_ORIGINS` | Orígenes HTTPS propios adicionales, separados por comas, si se utilizan. |
+| Método y ruta                                        | Acceso        | Operación                                                                              |
+| ---------------------------------------------------- | ------------- | -------------------------------------------------------------------------------------- |
+| `GET /`                                              | Público       | Identificación del servicio.                                                           |
+| `POST /auth/register`                                | Público       | Crear cliente; el rol no se recibe desde el formulario.                                |
+| `POST /auth/login`                                   | Público       | Obtener JWT y vencimiento.                                                             |
+| `GET /users/me`                                      | Autenticado   | Consultar el perfil vigente.                                                           |
+| `POST /users/`                                       | Administrador | Registrar un cliente.                                                                  |
+| `GET /products/`, `GET /products/{id}`               | Público       | Consultar productos activos.                                                           |
+| `GET /products/manage/`, `GET /products/manage/{id}` | Administrador | Consultar productos, incluidos inactivos.                                              |
+| `POST /products/`                                    | Administrador | Crear un componente.                                                                   |
+| `PUT /products/{id}`                                 | Administrador | Editar con `expected_stock` para proteger reservas concurrentes.                       |
+| `DELETE /products/{id}`                              | Administrador | Desactivar sin eliminar el documento.                                                  |
+| `GET /cart/`                                         | Autenticado   | Consultar carrito propio y totales.                                                    |
+| `POST /cart/items/{id}`                              | Autenticado   | Añadir y reservar unidades.                                                            |
+| `PUT /cart/items/{id}`                               | Autenticado   | Fijar cantidad; cero retira la línea.                                                  |
+| `DELETE /cart/`                                      | Autenticado   | Vaciar y devolver reservas.                                                            |
+| `POST /cart/import`                                  | Autenticado   | Reservar la selección de visitante de forma atómica e idempotente.                     |
+| `POST /cart/heartbeat`                               | Autenticado   | Renovar una reserva vigente.                                                           |
+| `POST /cart/checkout`                                | Autenticado   | Confirmar versión y total sin duplicar pedido ni descuento.                            |
+| `POST /orders/`                                      | Autenticado   | Crear directamente un pedido con productos y cantidades, descontando stock disponible. |
+| `GET /orders/`, `GET /orders/{id}`                   | Autenticado   | Consultar pedidos propios; los administradores pueden consultar todos.                 |
+| `PATCH /orders/{id}/status`                          | Administrador | Aplicar transiciones y devolver stock cuando corresponda.                              |
+| `POST /orders/{id}/notifications`                    | Administrador | Publicar una novedad interna.                                                          |
 
-Los dominios exactos de producción y del despliegue se incorporan desde `VERCEL_PROJECT_PRODUCTION_URL` y `VERCEL_URL`, cuando Vercel expone sus variables de sistema. Si están desactivadas, configura el dominio de la tienda manualmente en las dos variables anteriores. No se habilita un comodín para todos los dominios de Vercel.
+La web confirma su carrito reservado mediante `/cart/checkout`; el endpoint directo `/orders/` es una operación diferente y no consume reservas existentes. En las listas de pedidos se admiten `limit`, `offset`, `mine` y `order_status`.
 
-Mantén habilitada la conexión a Atlas para las sesiones de Django. La recopilación de archivos estáticos no necesita consultar MongoDB ni ejecutar migraciones. Si las sesiones aún no se prepararon, realiza el comando explícito indicado en la sección de sesiones; no lo agregues al build de Vercel.
+## Errores y recuperación
 
-Después del despliegue, comprueba `/salud/`, `/`, `/registro/`, `/ingresar/`, `/carrito/` y los recursos `/static/techgear_shop/css/store.css` y `/static/techgear_shop/js/store.js`. El acceso administrativo debe mantener las sesiones, las cookies HTTPS y la validación CSRF. La API debe responder desde Render para que se muestre el catálogo.
+| Situación                                                  | Comportamiento y siguiente paso                                                                                                        |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| API caída, sin conexión o respuesta lenta                  | La web muestra un mensaje controlado. Un fallo temporal no borra la sesión. Vuelve a intentar la consulta cuando el servicio responda. |
+| Producto sin stock o cantidades reservadas por otra cuenta | La API responde `409`; no completa reservas parciales. Ajusta las cantidades y revisa el carrito.                                      |
+| Precio o versión del carrito cambió                        | La confirmación se rechaza hasta revisar los datos actuales.                                                                           |
+| Edición de producto con inventario desactualizado          | La API responde `412`. Abre otra vez la ficha y revisa existencias antes de guardar.                                                   |
+| Sesión vencida o token rechazado                           | La cuenta debe iniciar sesión de nuevo.                                                                                                |
+| Usuario sin permisos administrativos                       | Se bloquea la operación con `403`.                                                                                                     |
+| Producto o pedido no disponible                            | Se muestra una página de error con navegación de recuperación; consultar un pedido no se presenta como un error de producto.           |
+| Datos inválidos o formulario sin protección CSRF           | La operación se rechaza y el formulario muestra sus errores cuando corresponde.                                                        |
+| Respuesta perdida al confirmar                             | Consulta **Mis pedidos** antes de repetir. La misma versión de carrito no genera dos pedidos.                                          |
+| Falla al devolver reservas durante el cierre de sesión     | La web conserva la sesión para permitir reintentar el cierre.                                                                          |
 
-Referencias: [Django en Vercel](https://vercel.com/docs/frameworks/full-stack/django), [versiones de Python](https://vercel.com/docs/functions/runtimes/python) y [variables de sistema](https://vercel.com/docs/environment-variables/system-environment-variables).
+Si un puerto local está ocupado, utiliza `cerrar_local.cmd --check` para revisar los servidores del proyecto antes de iniciar otra instancia. Si cambias CSS o JavaScript y el navegador conserva una versión anterior, recarga con `Ctrl+F5`.
 
 ## Pruebas y calidad
 
-Desde la raíz del repositorio:
+Desde la raíz, instala las herramientas de desarrollo en el entorno de la API:
 
 ```powershell
 & ./techgear_api/.venv/Scripts/python.exe -m pip install -r requirements-dev.txt
-& ./techgear_api/.venv/Scripts/python.exe -m ruff check .
-& ./techgear_api/.venv/Scripts/python.exe -m ruff format --check .
+```
+
+Ejecuta las pruebas y validaciones:
+
+```powershell
 $env:PYTHONPATH = (Resolve-Path ./techgear_api).Path
 & ./techgear_api/.venv/Scripts/python.exe -m unittest discover -s techgear_api/tests -v
 Remove-Item Env:PYTHONPATH
-& ./techgear_web/.venv/Scripts/python.exe techgear_web/manage.py check
 & ./techgear_web/.venv/Scripts/python.exe techgear_web/manage.py test config techgear_shop --verbosity 2
+& ./techgear_api/.venv/Scripts/python.exe -m ruff check .
+& ./techgear_api/.venv/Scripts/python.exe -m ruff format --check .
 & ./techgear_api/.venv/Scripts/python.exe -m pip check
 & ./techgear_web/.venv/Scripts/python.exe -m pip check
 git diff --check
 ```
 
-Las pruebas automáticas simulan MongoDB y no necesitan credenciales de Atlas ni escriben en la base de datos.
+La suite de la entrega contiene 42 pruebas de API y 75 de Django. Comprueba permisos, sesiones, contratos, errores, reservas simultáneas, confirmación idempotente, reversiones transaccionales y devolución de inventario. Utiliza datos ficticios y almacenamiento simulado; no necesita credenciales reales de Atlas ni modifica sus colecciones.
 
-## Control de versiones
+El flujo [Quality](.github/workflows/quality.yml) ejecuta las pruebas y comprobaciones en cada push a `main` y en los pull requests dirigidos a ella. Sus permisos se limitan a lectura del repositorio.
 
-El taller avanza secuencialmente en `main`, con un solo commit por clase y mensajes Conventional Commits.
+Para una revisión manual, utiliza una base de pruebas: recorre registro, login, carrito, confirmación, historial y gestión administrativa. Con 5 unidades iniciales, reservar 3 debe dejar 2 disponibles; confirmar no debe restarlas otra vez, y rechazar el pedido debe devolver las 3 unidades.
 
-## Django y MongoDB
+## Despliegue
 
-Se conserva Django como interfaz MVT que consumirá FastAPI por HTTP. Las cuentas de clientes, productos y pedidos se administran centralmente en la API; no se duplican usuarios con el modelo nativo de Django. La configuración inicial de componentes internos de Django utiliza `django-mongodb-backend` 6.1.x sin ejecutar migraciones en esta etapa.
+### API en Render
 
-La configuración sigue la [guía oficial de MongoDB](https://www.mongodb.com/docs/languages/python/django-mongodb/current/) y la [plantilla oficial, revisión 3c0170f](https://github.com/mongodb-labs/django-mongodb-project/tree/3c0170f6e6f9d110123e17e91d3c30c928c5dc0b).
+Conecta el repositorio a un servicio web Python con estos valores:
 
+| Campo             | Valor                                              |
+| ----------------- | -------------------------------------------------- |
+| Rama              | `main`                                             |
+| Root Directory    | `techgear_api`                                     |
+| Build Command     | `pip install -r requirements.txt`                  |
+| Start Command     | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| Health Check Path | `/`                                                |
+| Python            | `3.14.7`, fijado en `techgear_api/.python-version` |
 
-### Gestión de pedidos
+Configura como variables privadas `MONGO_URI`, `MONGO_DB_NAME=techgear_shop`, `JWT_SECRET_KEY` y `JWT_ACCESS_TOKEN_MINUTES=30`. Verifica los permisos de Atlas y su acceso de red para el servicio. El arranque no crea cuentas ni carga productos.
 
-En la web, una cuenta administradora accede a **Administración → Pedidos de clientes**
-(`/gestion/pedidos/`). Puede filtrar por estado, revisar cliente, componentes, cantidades y
-precios históricos, aceptar y preparar, marcar envío y entrega, rechazar antes del envío o
-registrar la devolución completa después de la entrega. Rechazar y devolver reponen las
-unidades una sola vez mediante una transacción de MongoDB. No se registran pagos ni reembolsos.
+Cuando finalice el despliegue, abre [la API](https://techgear-shop-api.onrender.com/) y [Swagger](https://techgear-shop-api.onrender.com/docs). Comprueba que el [OpenAPI publicado](https://techgear-shop-api.onrender.com/openapi.json) incluya las rutas de carrito y gestión de pedidos de esta entrega.
 
-Los cambios de estado y mensajes de **Notificar al cliente** aparecen en el detalle de
-**Mis pedidos** de su propietario; no se envían correos ni mensajes a servicios externos.
-Las notificaciones admiten reintentos sin duplicarse. Los pedidos anteriores sin historial
-siguen siendo compatibles. Las operaciones administrativas requieren rol de administrador
-en FastAPI y formularios con protección CSRF en Django.
+En el plan gratuito, Render puede suspender el servicio por inactividad y tardar en responder al reactivarse. La web muestra el error temporal y permite reintentar; no confirma compras automáticamente durante una caída.
+
+### Web en Vercel
+
+Importa el mismo repositorio como proyecto Django independiente:
+
+| Campo                   | Valor                                                                                          |
+| ----------------------- | ---------------------------------------------------------------------------------------------- |
+| Rama de producción      | `main`                                                                                         |
+| Root Directory          | `techgear_web`                                                                                 |
+| Framework Preset        | `Django`                                                                                       |
+| Install / Build Command | Predeterminados del framework; dependencias de `requirements.txt` y recopilación de estáticos. |
+| Output Directory        | Predeterminado, sin reemplazo manual.                                                          |
+| Python                  | `3.14`, definido en `techgear_web/.python-version`                                             |
+
+[techgear_web/vercel.json](techgear_web/vercel.json) declara el framework. La aplicación se sirve mediante `config.wsgi.application`; Django reúne los recursos en `STATIC_ROOT` y Vercel los publica en `/static/`.
+
+Configura estas variables para los entornos de Vercel que utilices:
+
+| Variable                      | Valor o criterio                                                    |
+| ----------------------------- | ------------------------------------------------------------------- |
+| `DJANGO_SECRET_KEY`           | Clave privada estable entre despliegues.                            |
+| `DJANGO_DEBUG`                | `False`; la configuración también lo desactiva al detectar Vercel.  |
+| `TECHGEAR_API_URL`            | `https://techgear-shop-api.onrender.com`                            |
+| `MONGO_URI`                   | URI privada de Atlas para persistir las sesiones.                   |
+| `MONGO_DB_NAME`               | `techgear_shop`                                                     |
+| `DJANGO_ALLOWED_HOSTS`        | Dominios propios adicionales, separados por comas y sin protocolo.  |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | Orígenes propios adicionales, con `https://` y separados por comas. |
+
+Los dominios que Vercel entrega en `VERCEL_URL` y `VERCEL_PROJECT_PRODUCTION_URL` se incorporan automáticamente a los hosts y orígenes permitidos. Si no se exponen esas variables, configura el dominio exacto manualmente. Las claves y URI privadas no se incluyen en `vercel.json` ni en el repositorio.
+
+Prepara las sesiones de Django mediante el comando local explícito antes de usar la web desplegada. La compilación no ejecuta migraciones ni necesita modificar las colecciones comerciales.
+
+Comprueba [salud web](https://techgear-shop-ten.vercel.app/salud/), [catálogo](https://techgear-shop-ten.vercel.app/), [registro](https://techgear-shop-ten.vercel.app/registro/), [login](https://techgear-shop-ten.vercel.app/ingresar/) y [carrito](https://techgear-shop-ten.vercel.app/carrito/). Revisa también el acceso de clientes y administradores, los recursos estáticos, las cookies HTTPS y los formularios CSRF. Para compartir la tienda, utiliza su dominio de producción y verifica el acceso sin iniciar sesión en Vercel.
+
+## Versionado y entrega
+
+El desarrollo del taller se realiza secuencialmente sobre `main`, con commits agrupados por entrega y mensajes Conventional Commits. La release `v1.0` identifica el código final y su documentación; el número de versión de la API es `1.0.0`.
+
+Consulta [el historial](https://github.com/Yojemr/Techgear_Shop/commits/main/), [las pruebas publicadas](https://github.com/Yojemr/Techgear_Shop/actions) y [la release](https://github.com/Yojemr/Techgear_Shop/releases/tag/v1.0). Desde la release se pueden descargar los archivos fuente en ZIP o TAR.GZ correspondientes al código etiquetado.
+
+## Referencias
+
+- [FastAPI](https://fastapi.tiangolo.com/): documentación del framework de la API.
+- [Django](https://docs.djangoproject.com/): documentación del framework web y sus componentes.
+- [Pydantic](https://docs.pydantic.dev/): esquemas y validación de datos.
+- [PyMongo](https://www.mongodb.com/docs/languages/python/pymongo-driver/current/): controlador Python para MongoDB.
+- [Django MongoDB Backend](https://www.mongodb.com/docs/languages/python/django-mongodb/current/): persistencia de Django en MongoDB.
+- [HTTPX](https://www.python-httpx.org/): cliente HTTP utilizado por la web.
+- [FastAPI en Render](https://render.com/docs/deploy-fastapi): guía de despliegue de la API.
+- [Django en Vercel](https://vercel.com/docs/frameworks/full-stack/django): guía del despliegue web.
+- [Releases en GitHub](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository): publicación de entregas etiquetadas.
+- [Fuentes del catálogo](docs/catalog_sources.md): precios de referencia, fotografías y especificaciones de los componentes.

@@ -25,7 +25,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(
     title="Techgear Shop API",
     description="API de catálogo, autenticación y pedidos de Techgear Shop.",
-    version="0.2.0",
+    version="1.0.0",
     lifespan=lifespan,
 )
 
